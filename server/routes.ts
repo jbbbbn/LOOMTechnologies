@@ -732,6 +732,11 @@ Based on this real data, answer questions about the user's interests, habits, an
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
       
+      // Debug: Log user preferences for music-related questions
+      if (message.toLowerCase().includes('album') || message.toLowerCase().includes('music') || message.toLowerCase().includes('favorite')) {
+        console.log('User preferences for music question:', JSON.stringify(userContext.preferences, null, 2));
+      }
+
       // Use LangChain orchestrator for intelligent task routing
       const aiResponse = await langchainOrchestrator.orchestrateTask(
         message,

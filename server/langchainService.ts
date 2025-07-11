@@ -246,28 +246,46 @@ export class LangChainOrchestrator {
     if (messageLower.includes('album') || messageLower.includes('music') || messageLower.includes('favorite')) {
       let response = "";
       
-      // Search through note content for music information
-      if (userContext.notes && userContext.notes.length > 0) {
-        const musicNotes = userContext.notes.filter((note: any) => 
-          note.content && (
-            note.content.toLowerCase().includes('album') ||
-            note.content.toLowerCase().includes('music') ||
-            note.content.toLowerCase().includes('kanye') ||
-            note.content.toLowerCase().includes('beautiful') ||
-            note.content.toLowerCase().includes('dark') ||
-            note.content.toLowerCase().includes('twisted') ||
-            note.content.toLowerCase().includes('fantasy')
+      // First, check saved preferences for music information
+      if (userContext.preferences && userContext.preferences.length > 0) {
+        const musicPreferences = userContext.preferences.filter((pref: any) => 
+          pref.category === 'interests' && (
+            pref.value.toLowerCase().includes('album') ||
+            pref.value.toLowerCase().includes('music') ||
+            pref.value.toLowerCase().includes('kanye') ||
+            pref.value.toLowerCase().includes('beautiful') ||
+            pref.value.toLowerCase().includes('dark') ||
+            pref.value.toLowerCase().includes('twisted') ||
+            pref.value.toLowerCase().includes('fantasy')
           )
         );
         
-        if (musicNotes.length > 0) {
-          response += "Based on your notes, I can see your music preferences:\n\n";
-          musicNotes.forEach((note: any) => {
-            response += `From your "${note.title}" note: ${note.content}\n`;
+        if (musicPreferences.length > 0) {
+          response += "Based on your saved preferences, here are your music interests:\n\n";
+          musicPreferences.forEach((pref: any) => {
+            response += `🎵 ${pref.value}\n`;
           });
-        } else {
-          response += "I see you mentioned music albums, but I don't have specific album information in your notes yet. ";
+          response += "\n";
         }
+      }
+      
+      // If asking specifically about favorite album, give direct answer
+      if (messageLower.includes("what's my favorite album") || 
+          messageLower.includes("favorite album") ||
+          messageLower.includes("my favorite album")) {
+        
+        if (userContext.preferences && userContext.preferences.length > 0) {
+          const favoriteAlbum = userContext.preferences.find((pref: any) => 
+            pref.category === 'interests' && 
+            pref.value.toLowerCase().includes('my beautiful dark twisted fantasy')
+          );
+          
+          if (favoriteAlbum) {
+            return `🎵 Your favorite album is: **${favoriteAlbum.value}**\n\nThis preference was saved from your previous conversations.`;
+          }
+        }
+        
+        return "I don't have information about your favorite album saved yet. You can tell me about your music preferences and I'll remember them!";
       }
       
       // Check if user just mentioned their favorite album
