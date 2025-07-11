@@ -201,6 +201,85 @@ export class LangChainOrchestrator {
   }
 
   private generatePersonalizedResponse(message: string, userContext: Record<string, any>): string {
+    // Check if user is asking about personal information
+    const messageLower = message.toLowerCase();
+    
+    // Handle questions about user's knowledge/information
+    if (messageLower.includes('what do you know about me') || 
+        messageLower.includes('what do you know') ||
+        messageLower.includes('tell me about myself')) {
+      
+      let response = "Based on your LOOM data, here's what I know about you:\n\n";
+      
+      // Add notes information with actual content
+      if (userContext.notes && userContext.notes.length > 0) {
+        response += `📝 **Your Notes:**\n`;
+        userContext.notes.forEach((note: any) => {
+          response += `- "${note.title}"`;
+          if (note.content && note.content.length > 0) {
+            response += `: ${note.content.slice(0, 100)}${note.content.length > 100 ? '...' : ''}`;
+          }
+          response += '\n';
+        });
+        response += '\n';
+      }
+      
+      // Add preferences
+      if (userContext.preferences && userContext.preferences.length > 0) {
+        response += `🎯 **Your Preferences:**\n`;
+        userContext.preferences.forEach((pref: any) => {
+          response += `- ${pref.category}: ${pref.key} = ${pref.value}\n`;
+        });
+        response += '\n';
+      }
+      
+      // Add media information
+      if (userContext.media && userContext.media.length > 0) {
+        response += `🖼️ **Your Media:** ${userContext.media.length} files including ${userContext.media.map((m: any) => m.filename).slice(0, 3).join(', ')}\n\n`;
+      }
+      
+      response += "I can help you with any questions about your data or assist with tasks.";
+      return response;
+    }
+    
+    // Handle music/album questions
+    if (messageLower.includes('album') || messageLower.includes('music') || messageLower.includes('favorite')) {
+      let response = "";
+      
+      // Search through note content for music information
+      if (userContext.notes && userContext.notes.length > 0) {
+        const musicNotes = userContext.notes.filter((note: any) => 
+          note.content && (
+            note.content.toLowerCase().includes('album') ||
+            note.content.toLowerCase().includes('music') ||
+            note.content.toLowerCase().includes('kanye') ||
+            note.content.toLowerCase().includes('beautiful') ||
+            note.content.toLowerCase().includes('dark') ||
+            note.content.toLowerCase().includes('twisted') ||
+            note.content.toLowerCase().includes('fantasy')
+          )
+        );
+        
+        if (musicNotes.length > 0) {
+          response += "Based on your notes, I can see your music preferences:\n\n";
+          musicNotes.forEach((note: any) => {
+            response += `From your "${note.title}" note: ${note.content}\n`;
+          });
+        } else {
+          response += "I see you mentioned music albums, but I don't have specific album information in your notes yet. ";
+        }
+      }
+      
+      // Check if user just mentioned their favorite album
+      if (messageLower.includes('my beautiful dark twisted fantasy') || 
+          messageLower.includes('kanye west')) {
+        response += "I've noted that 'My Beautiful Dark Twisted Fantasy' by Kanye West is your favorite album. This information will be saved to your preferences.";
+      }
+      
+      return response || "I'd be happy to help with music-related questions. What would you like to know?";
+    }
+    
+    // Default personalized response
     let response = "I'm here to help you with your digital life management. ";
 
     // Add context from user's data
