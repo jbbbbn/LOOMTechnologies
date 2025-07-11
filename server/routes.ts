@@ -738,15 +738,41 @@ Focus on providing detailed, personalized responses using the user's actual data
         console.log('User preferences for entertainment question:', JSON.stringify(userContext.preferences, null, 2));
       }
 
-      // FORCE USE OF VECTOR ORCHESTRATOR - NO FALLBACK
-      console.log('🚀 FORCING VECTOR ORCHESTRATOR USAGE');
-      const { vectorOrchestrator } = await import('./vectorService');
-      const aiResponse = await vectorOrchestrator.orchestrateTask(
-        message,
-        userId,
-        userContext
-      );
-      console.log('✅ VECTOR ORCHESTRATOR USED:', aiResponse.tools_used);
+      // TRY PYTHON AI SERVICE FIRST
+      console.log('🚀 Using Python AI Assistant Service');
+      
+      let aiResponse;
+      try {
+        const response = await fetch('http://localhost:8001/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message,
+            user_id: userId,
+            user_context: userContext
+          })
+        });
+
+        if (response.ok) {
+          aiResponse = await response.json();
+          console.log('✅ PYTHON AI SERVICE USED:', aiResponse.tools_used);
+        } else {
+          throw new Error(`Python AI service responded with status: ${response.status}`);
+        }
+      } catch (fetchError) {
+        console.log('❌ Python AI service unavailable, using fallback');
+        
+        // Fallback to vector orchestrator
+        const { vectorOrchestrator } = await import('./vectorService');
+        aiResponse = await vectorOrchestrator.orchestrateTask(
+          message,
+          userId,
+          userContext
+        );
+        console.log('✅ VECTOR ORCHESTRATOR FALLBACK USED:', aiResponse.tools_used);
+      }
       
       let response = aiResponse.response;
       
