@@ -9,12 +9,15 @@ import {
   Images, 
   Home,
   Bell,
-  User
+  User,
+  LogOut
 } from "lucide-react";
 import loomLogo from "@assets/LOOM_logo_2_1752244843559.jpg";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Navigation() {
   const [location] = useLocation();
+  const { logout, user } = useAuth();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -63,9 +66,14 @@ export function Navigation() {
             <Button variant="ghost" size="sm">
               <Bell className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
-              <User className="w-4 h-4" />
-            </Button>
+            {user && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">{user.email}</span>
+                <Button variant="ghost" size="sm" onClick={logout}>
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

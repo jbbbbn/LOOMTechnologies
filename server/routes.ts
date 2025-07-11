@@ -4,15 +4,117 @@ import { WebSocketServer, WebSocket } from "ws";
 import OpenAI from "openai";
 import { storage } from "./storage";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema } from "@shared/schema";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import { performWebSearch } from "./searchService";
+import type { Request, Response, NextFunction } from "express";
 
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_KEY || "sk-test-key"
 });
 
-// Default user ID for demo
-const DEFAULT_USER_ID = 1;
+// JWT secret - in production, use environment variable
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+
+// Auth schemas
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+// Auth middleware
+function authenticateToken(req: Request & { user?: any }, res: Response, next: NextFunction) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid token' });
+    }
+    req.user = user;
+    next();
+  });
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { email, password } = loginSchema.parse(req.body);
+      
+      // Check if user exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Create user
+      const user = await storage.createUser({
+        username: email.split('@')[0],
+        email,
+        password: hashedPassword,
+      });
+      
+      // Generate token
+      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      res.json({ 
+        user: { id: user.id, email: user.email, username: user.username }, 
+        token 
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Invalid signup data" });
+    }
+  });
+  
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = loginSchema.parse(req.body);
+      
+      // Find user
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // Check password
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // Generate token
+      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      res.json({ 
+        user: { id: user.id, email: user.email, username: user.username }, 
+        token 
+      });
+    } catch (error) {
+      res.status(400).json({ error: "Invalid login data" });
+    }
+  });
+  
+  app.get("/api/auth/me", authenticateToken, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user.userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({ id: user.id, email: user.email, username: user.username });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
   // Helper function to generate AI insights
   async function generateAIInsights(data: any, appType: string): Promise<string> {
     try {
@@ -39,27 +141,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Notes API
-  app.get("/api/notes", async (req, res) => {
+  app.get("/api/notes", authenticateToken, async (req, res) => {
     try {
-      const notes = await storage.getNotesByUserId(DEFAULT_USER_ID);
+      const notes = await storage.getNotesByUserId(req.user.userId);
       res.json(notes);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch notes" });
     }
   });
 
-  app.post("/api/notes", async (req, res) => {
+  app.post("/api/notes", authenticateToken, async (req, res) => {
     try {
       const validatedData = insertNoteSchema.parse({
         ...req.body,
-        userId: DEFAULT_USER_ID
+        userId: req.user.userId
       });
       
       const note = await storage.createNote(validatedData);
       
       // Store AI learning data
       await storage.createAILearning({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         appType: "notes",
         dataType: "note_created",
         data: { title: note.title, content: note.content, tags: note.tags }
@@ -71,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/notes/:id", async (req, res) => {
+  app.put("/api/notes/:id", authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -82,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.createAILearning({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         appType: "notes",
         dataType: "note_updated",
         data: { id, updates }
@@ -94,7 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/notes/:id", async (req, res) => {
+  app.delete("/api/notes/:id", authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteNote(id);
@@ -110,26 +212,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Events API
-  app.get("/api/events", async (req, res) => {
+  app.get("/api/events", authenticateToken, async (req, res) => {
     try {
-      const events = await storage.getEventsByUserId(DEFAULT_USER_ID);
+      const events = await storage.getEventsByUserId(req.user.userId);
       res.json(events);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch events" });
     }
   });
 
-  app.post("/api/events", async (req, res) => {
+  app.post("/api/events", authenticateToken, async (req, res) => {
     try {
       const validatedData = insertEventSchema.parse({
         ...req.body,
-        userId: DEFAULT_USER_ID
+        userId: req.user.userId
       });
       
       const event = await storage.createEvent(validatedData);
       
       await storage.createAILearning({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         appType: "calendar",
         dataType: "event_created",
         data: { title: event.title, startTime: event.startTime, endTime: event.endTime }
@@ -142,65 +244,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Search API
-  app.get("/api/searches", async (req, res) => {
+  app.get("/api/searches", authenticateToken, async (req, res) => {
     try {
-      const searches = await storage.getSearchesByUserId(DEFAULT_USER_ID);
+      const searches = await storage.getSearchesByUserId(req.user.userId);
       res.json(searches);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch searches" });
     }
   });
 
-  app.post("/api/search", async (req, res) => {
+  app.post("/api/search", authenticateToken, async (req, res) => {
     try {
       const { query } = req.body;
+      if (!query) {
+        return res.status(400).json({ error: "Query is required" });
+      }
       
-      // Simulate search results (in real app, this would query external APIs)
-      const mockResults = [
-        { title: `Result for "${query}"`, url: `https://example.com/search?q=${encodeURIComponent(query)}`, snippet: `Information about ${query}` },
-        { title: `Advanced ${query} guide`, url: `https://example.com/guide/${query}`, snippet: `Learn more about ${query}` }
-      ];
+      // Perform real web search
+      const searchResults = await performWebSearch(query);
       
       const search = await storage.createSearch({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         query,
-        results: mockResults
+        results: searchResults
       });
       
       await storage.createAILearning({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         appType: "search",
         dataType: "search_performed",
-        data: { query, resultsCount: mockResults.length }
+        data: { query, results: searchResults }
       });
       
-      res.json(search);
+      res.json(searchResults);
     } catch (error) {
       res.status(400).json({ error: "Search failed" });
     }
   });
 
   // Emails API
-  app.get("/api/emails", async (req, res) => {
+  app.get("/api/emails", authenticateToken, async (req, res) => {
     try {
-      const emails = await storage.getEmailsByUserId(DEFAULT_USER_ID);
+      const emails = await storage.getEmailsByUserId(req.user.userId);
       res.json(emails);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch emails" });
     }
   });
 
-  app.post("/api/emails", async (req, res) => {
+  app.post("/api/emails", authenticateToken, async (req, res) => {
     try {
       const validatedData = insertEmailSchema.parse({
         ...req.body,
-        userId: DEFAULT_USER_ID
+        userId: req.user.userId
       });
       
       const email = await storage.createEmail(validatedData);
       
       await storage.createAILearning({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         appType: "mail",
         dataType: "email_created",
         data: { subject: email.subject, recipient: email.recipient }
@@ -213,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Messages API
-  app.get("/api/messages/:roomId", async (req, res) => {
+  app.get("/api/messages/:roomId", authenticateToken, async (req, res) => {
     try {
       const { roomId } = req.params;
       const messages = await storage.getMessagesByRoomId(roomId);
@@ -224,26 +326,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Media API
-  app.get("/api/media", async (req, res) => {
+  app.get("/api/media", authenticateToken, async (req, res) => {
     try {
-      const media = await storage.getMediaByUserId(DEFAULT_USER_ID);
+      const media = await storage.getMediaByUserId(req.user.userId);
       res.json(media);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch media" });
     }
   });
 
-  app.post("/api/media", async (req, res) => {
+  app.post("/api/media", authenticateToken, async (req, res) => {
     try {
       const validatedData = insertMediaSchema.parse({
         ...req.body,
-        userId: DEFAULT_USER_ID
+        userId: req.user.userId
       });
       
       const media = await storage.createMedia(validatedData);
       
       await storage.createAILearning({
-        userId: DEFAULT_USER_ID,
+        userId: req.user.userId,
         appType: "gallery",
         dataType: "media_uploaded",
         data: { filename: media.filename, mimeType: media.mimeType }
@@ -256,9 +358,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Insights API
-  app.get("/api/ai/insights", async (req, res) => {
+  app.get("/api/ai/insights", authenticateToken, async (req, res) => {
     try {
-      const learningData = await storage.getAILearningByUserId(DEFAULT_USER_ID);
+      const learningData = await storage.getAILearningByUserId(req.user.userId);
       const insights = await generateAIInsights(learningData, "platform");
       res.json({ insights });
     } catch (error) {
@@ -266,10 +368,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ai/chat", async (req, res) => {
+  app.post("/api/ai/chat", authenticateToken, async (req, res) => {
     try {
       const { message } = req.body;
-      const learningData = await storage.getAILearningByUserId(DEFAULT_USER_ID);
+      const learningData = await storage.getAILearningByUserId(req.user.userId);
       
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -305,14 +407,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { type, content, roomId } = JSON.parse(data.toString());
         
         if (type === 'chat_message') {
+          // Note: WebSocket doesn't have built-in authentication, so we'd need to implement token-based auth
+          // For now, we'll use a default user ID, but in production this should be properly authenticated
           const message = await storage.createMessage({
-            userId: DEFAULT_USER_ID,
+            userId: 1, // This should be extracted from the authenticated user
             content,
             roomId
           });
           
           await storage.createAILearning({
-            userId: DEFAULT_USER_ID,
+            userId: 1, // This should be extracted from the authenticated user
             appType: "chat",
             dataType: "message_sent",
             data: { content, roomId }
