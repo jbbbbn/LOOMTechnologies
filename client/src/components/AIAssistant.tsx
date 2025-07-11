@@ -94,17 +94,18 @@ export function AIAssistant() {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <Card className="mt-4 w-96 max-h-[500px] shadow-xl">
-            <CardHeader className="pb-3">
+          <Card className="mt-4 w-96 max-h-[500px] glass-effect border-orange-200/50 shadow-2xl hover-lift scale-in">
+            <CardHeader className="pb-4">
               <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Bot className="w-5 h-5 text-[var(--loom-orange)]" />
-                  <span>LOOM AI Assistant</span>
+                <div className="flex items-center space-x-3">
+                  <Bot className="w-5 h-5 text-orange-600" />
+                  <span className="text-lg font-semibold">LOOM AI Assistant</span>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsOpen(false)}
+                  className="rounded-full hover:bg-orange-50 dark:hover:bg-orange-900/20"
                 >
                   {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
                 </Button>
@@ -112,15 +113,15 @@ export function AIAssistant() {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* AI Insights */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-[var(--loom-orange)]" />
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <Sparkles className="w-4 h-4 text-orange-600" />
                   <span className="text-sm font-medium">{t('aiInsights')}</span>
                 </div>
                 {insightsLoading ? (
-                  <div className="animate-pulse bg-gray-200 h-16 rounded"></div>
+                  <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-16 rounded-xl"></div>
                 ) : (
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm">
+                  <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-xl border border-orange-200/30 backdrop-blur-sm">
                     <div 
                       className="prose prose-sm max-w-none dark:prose-invert"
                       dangerouslySetInnerHTML={{
@@ -134,8 +135,8 @@ export function AIAssistant() {
               {/* Chat Interface */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <MessageCircle className="w-4 h-4 text-[var(--loom-orange)]" />
+                  <div className="flex items-center space-x-3">
+                    <MessageCircle className="w-4 h-4 text-orange-600" />
                     <span className="text-sm font-medium">{t('aiAssistant')}</span>
                   </div>
                   {chatHistory.length > 0 && (
@@ -143,26 +144,26 @@ export function AIAssistant() {
                       variant="ghost"
                       size="sm"
                       onClick={clearChatHistory}
-                      className="text-gray-500 hover:text-red-500"
+                      className="text-gray-500 hover:text-red-500 rounded-full"
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   )}
                 </div>
                 
-                <ScrollArea className="h-40 w-full border rounded-lg p-3" ref={scrollAreaRef}>
+                <ScrollArea className="h-40 w-full border-0 rounded-xl p-3 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm" ref={scrollAreaRef}>
                   {chatHistory.length === 0 ? (
-                    <div className="text-sm text-gray-500 text-center py-8">
+                    <div className="text-sm text-gray-500 text-center py-8 font-light">
                       {t('askAnything')}
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {chatHistory.map((msg, idx) => (
-                        <div key={msg.timestamp || idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[80%] p-2 rounded-lg text-sm ${
+                        <div key={msg.timestamp || idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} slide-in`}>
+                          <div className={`max-w-[80%] p-3 rounded-2xl text-sm font-light ${
                             msg.role === 'user' 
-                              ? 'bg-[var(--loom-orange)] text-white' 
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                              ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg' 
+                              : 'bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-gray-100 border border-gray-200/50 dark:border-gray-600/50'
                           }`}>
                             <div 
                               className="prose prose-sm max-w-none dark:prose-invert"
@@ -175,8 +176,8 @@ export function AIAssistant() {
                       ))}
                       {chatMutation.isPending && (
                         <div className="flex justify-start">
-                          <div className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded-lg text-sm">
-                            <div className="animate-pulse">{t('loading')}</div>
+                          <div className="bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-gray-100 p-3 rounded-2xl text-sm border border-gray-200/50 dark:border-gray-600/50">
+                            <div className="animate-pulse font-light">{t('loading')}</div>
                           </div>
                         </div>
                       )}
@@ -190,11 +191,12 @@ export function AIAssistant() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    className="rounded-xl border-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
                   />
                   <Button
                     onClick={handleSendMessage}
                     disabled={!message.trim() || chatMutation.isPending}
-                    className="bg-[var(--loom-orange)] hover:bg-[var(--loom-light)]"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-lg rounded-xl"
                   >
                     <Send className="w-4 h-4" />
                   </Button>

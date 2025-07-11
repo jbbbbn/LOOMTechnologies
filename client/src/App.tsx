@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Layout from "@/components/Layout";
+import { PageTransition } from "@/components/PageTransition";
 import Home from "@/pages/Home";
 import Landing from "@/pages/Landing";
 import Notes from "@/pages/Notes";
@@ -24,10 +25,10 @@ function Router() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--loom-orange)] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your digital consciousness...</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center fade-in">
+        <div className="text-center scale-in">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-6"></div>
+          <p className="text-gray-600 dark:text-gray-300 text-lg font-light">Loading your AI clone...</p>
         </div>
       </div>
     );
@@ -45,18 +46,20 @@ function Router() {
 
   return (
     <Layout>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/notes" component={Notes} />
-        <Route path="/calendar" component={Calendar} />
-        <Route path="/search" component={Search} />
-        <Route path="/mail" component={Mail} />
-        <Route path="/chat" component={Chat} />
-        <Route path="/gallery" component={Gallery} />
-        <Route path="/ai" component={AIChat} />
-        <Route path="/settings" component={Settings} />
-        <Route component={NotFound} />
-      </Switch>
+      <PageTransition>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/notes" component={Notes} />
+          <Route path="/calendar" component={Calendar} />
+          <Route path="/search" component={Search} />
+          <Route path="/mail" component={Mail} />
+          <Route path="/chat" component={Chat} />
+          <Route path="/gallery" component={Gallery} />
+          <Route path="/ai" component={AIChat} />
+          <Route path="/settings" component={Settings} />
+          <Route component={NotFound} />
+        </Switch>
+      </PageTransition>
     </Layout>
   );
 }

@@ -108,68 +108,68 @@ export default function Home() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-6 space-y-8 fade-in">
       {/* Welcome Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+      <div className="text-center space-y-4 slide-in">
+        <h1 className="text-5xl font-bold loom-text-gradient">
           Welcome to LOOM
         </h1>
-        <p className="text-xl text-muted-foreground">
+        <p className="text-xl text-muted-foreground font-light">
           Your AI clone helper platform
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground opacity-70">
           Hello, {user?.username || user?.firstName || user?.email?.split('@')[0]} - Your AI clone is learning from your activities across all apps
         </p>
       </div>
 
       {/* AI Insights Section */}
-      <Card className="bg-gradient-to-r from-orange-50 to-red-50 border-orange-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-6 w-6 text-orange-600" />
+      <Card className="glass-effect border-orange-200/50 scale-in">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-lg">
+            <Brain className="h-5 w-5 text-orange-600" />
             AI Clone Insights
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pb-2">
             <Activity className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-green-600">AI Clone Learning Active</span>
+            <span className="text-sm text-green-600 font-medium">AI Clone Learning Active</span>
           </div>
           
-          <div className="p-4 bg-white rounded-lg border border-orange-200">
+          <div className="p-4 bg-white/70 dark:bg-gray-800/70 rounded-xl border border-orange-200/30 backdrop-blur-sm">
             <div 
-              className="prose prose-sm max-w-none"
+              className="prose prose-sm max-w-none dark:prose-invert"
               dangerouslySetInnerHTML={{
                 __html: insights?.insights || "Your AI clone is initializing. Start using LOOM apps to build your digital helper profile."
               }}
             />
           </div>
-
-
         </CardContent>
       </Card>
 
       {/* Apps Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {apps.map((app) => {
+        {apps.map((app, index) => {
           const Icon = app.icon;
           return (
-            <Card key={app.name} className="hover:shadow-lg transition-shadow cursor-pointer group">
+            <Card key={app.name} className="hover-lift cursor-pointer group border-0 minimal-shadow scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className={`p-2 rounded-lg ${app.color} text-white`}>
+                  <div className={`p-3 rounded-xl ${app.color} text-white shadow-lg group-hover:scale-110 smooth-transition`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <Badge variant="secondary">{app.count}</Badge>
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-0 px-3 py-1 rounded-full font-medium">
+                    {app.count}
+                  </Badge>
                 </div>
-                <CardTitle className="text-lg">{app.name}</CardTitle>
+                <CardTitle className="text-lg font-semibold group-hover:text-orange-600 smooth-transition">{app.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{app.description}</p>
-                <Button asChild className="w-full group-hover:bg-orange-500 group-hover:text-white">
+                <p className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 smooth-transition font-light mb-4">{app.description}</p>
+                <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-lg text-white font-medium">
                   <Link href={app.path}>
-                    Open App
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    Open {app.name}
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 smooth-transition" />
                   </Link>
                 </Button>
               </CardContent>
@@ -179,32 +179,32 @@ export default function Home() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
+      <Card className="glass-effect border-gray-200/50 scale-in">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-lg">
+            <Plus className="h-5 w-5 text-orange-600" />
             Quick Actions
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
+          <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 hover-lift border-0 minimal-shadow bg-white/50 backdrop-blur-sm">
             <Link href="/notes">
-              <StickyNote className="h-6 w-6" />
-              <span className="font-medium">Create Note</span>
+              <StickyNote className="h-6 w-6 text-blue-600" />
+              <span className="font-medium text-gray-700">Create Note</span>
             </Link>
           </Button>
           
-          <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
+          <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 hover-lift border-0 minimal-shadow bg-white/50 backdrop-blur-sm">
             <Link href="/calendar">
-              <Calendar className="h-6 w-6" />
-              <span className="font-medium">Schedule Event</span>
+              <Calendar className="h-6 w-6 text-green-600" />
+              <span className="font-medium text-gray-700">Schedule Event</span>
             </Link>
           </Button>
           
-          <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
+          <Button asChild variant="outline" className="h-auto p-6 flex-col space-y-3 hover-lift border-0 minimal-shadow bg-white/50 backdrop-blur-sm">
             <Link href="/search">
-              <Search className="h-6 w-6" />
-              <span className="font-medium">Search Web</span>
+              <Search className="h-6 w-6 text-purple-600" />
+              <span className="font-medium text-gray-700">Search Web</span>
             </Link>
           </Button>
           

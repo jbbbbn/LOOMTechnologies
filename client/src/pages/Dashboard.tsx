@@ -107,20 +107,20 @@ export default function Dashboard() {
   const consciousnessProgress = Math.min((totalActivity / 50) * 100, 100); // 50 activities = 100%
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 fade-in">
       {/* Welcome Section */}
-      <div className="mb-8">
+      <div className="mb-8 slide-in">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
               Welcome back, {user?.username || user?.firstName || user?.email?.split('@')[0]}
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 dark:text-gray-300 mt-2 font-light">
               Your AI clone is actively learning and evolving to help you better
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="text-[var(--loom-orange)] border-[var(--loom-orange)]">
+            <Badge variant="secondary" className="text-orange-600 border-orange-600 bg-orange-50 dark:bg-orange-900/20 px-3 py-1 rounded-full">
               <Activity className="w-4 h-4 mr-1" />
               AI Learning Active
             </Badge>
@@ -132,16 +132,16 @@ export default function Dashboard() {
 
       {/* AI Insights */}
       {insights && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+        <Card className="mb-8 glass-effect border-blue-200/50 scale-in">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-3 text-lg">
               <TrendingUp className="w-5 h-5 text-blue-500" />
               <span>AI Insights</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div 
-              className="prose prose-sm max-w-none"
+              className="prose prose-sm max-w-none dark:prose-invert"
               dangerouslySetInnerHTML={{
                 __html: insights.insights
               }}
@@ -152,30 +152,30 @@ export default function Dashboard() {
 
       {/* Application Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {apps.map((app) => (
-          <Card key={app.path} className="hover:shadow-lg transition-shadow cursor-pointer group">
+        {apps.map((app, index) => (
+          <Card key={app.path} className="hover-lift cursor-pointer group border-0 minimal-shadow scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 rounded-lg ${app.color} flex items-center justify-center`}>
+                  <div className={`w-12 h-12 rounded-xl ${app.color} flex items-center justify-center shadow-lg group-hover:scale-110 smooth-transition`}>
                     <app.icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{app.name}</CardTitle>
-                    <p className="text-sm text-gray-500">{app.description}</p>
+                    <CardTitle className="text-lg font-semibold group-hover:text-orange-600 smooth-transition">{app.name}</CardTitle>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-light">{app.description}</p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[var(--loom-orange)] transition-colors" />
+                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 smooth-transition" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-900">{app.count}</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{app.count}</div>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => window.location.href = app.path}
-                  className="text-[var(--loom-orange)] hover:bg-[var(--loom-orange)]/10"
+                  className="text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg font-medium"
                 >
                   Open
                 </Button>
@@ -186,9 +186,9 @@ export default function Dashboard() {
       </div>
 
       {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
+      <Card className="glass-effect border-gray-200/50 scale-in">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center space-x-3 text-lg">
             <Clock className="w-5 h-5 text-gray-500" />
             <span>Recent Activity</span>
           </CardTitle>
