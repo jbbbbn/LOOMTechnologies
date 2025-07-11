@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { aiService } from "./aiService";
-import { mistralService } from "./mistralService";
+import { gpt4allService } from "./gpt4allService";
 import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema } from "@shared/schema";

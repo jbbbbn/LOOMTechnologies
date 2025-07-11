@@ -212,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const event = await storage.createEvent(validatedData);
       
       await storage.createAILearning({
-        userId: (req as any).user.userId,
+        userId: ((req as any).user.userId,
         appType: "calendar",
         dataType: "event_created",
         data: { title: event.title, startTime: event.startTime, endTime: event.endTime }
@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search API
   app.get("/api/searches", authenticateToken, async (req, res) => {
     try {
-      const searches = await storage.getSearchesByUserId((req as any).user.userId);
+      const searches = await storage.getSearchesByUserId(((req as any).user.userId);
       res.json(searches);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch searches" });
@@ -245,13 +245,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const searchResults = await performWebSearch(query);
       
       const search = await storage.createSearch({
-        userId: (req as any).user.userId,
+        userId: ((req as any).user.userId,
         query,
         results: searchResults
       });
       
       await storage.createAILearning({
-        userId: (req as any).user.userId,
+        userId: ((req as any).user.userId,
         appType: "search",
         dataType: "search_performed",
         data: { query, results: searchResults }
@@ -266,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Emails API
   app.get("/api/emails", authenticateToken, async (req, res) => {
     try {
-      const emails = await storage.getEmailsByUserId((req as any).user.userId);
+      const emails = await storage.getEmailsByUserId(((req as any).user.userId);
       res.json(emails);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch emails" });
@@ -277,13 +277,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertEmailSchema.parse({
         ...req.body,
-        userId: (req as any).user.userId
+        userId: ((req as any).user.userId
       });
       
       const email = await storage.createEmail(validatedData);
       
       await storage.createAILearning({
-        userId: (req as any).user.userId,
+        userId: ((req as any).user.userId,
         appType: "mail",
         dataType: "email_created",
         data: { subject: email.subject, recipient: email.recipient }
@@ -309,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Media API
   app.get("/api/media", authenticateToken, async (req, res) => {
     try {
-      const media = await storage.getMediaByUserId((req as any).user.userId);
+      const media = await storage.getMediaByUserId(((req as any).user.userId);
       res.json(media);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch media" });
@@ -320,13 +320,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertMediaSchema.parse({
         ...req.body,
-        userId: (req as any).user.userId
+        userId: ((req as any).user.userId
       });
       
       const media = await storage.createMedia(validatedData);
       
       await storage.createAILearning({
-        userId: (req as any).user.userId,
+        userId: ((req as any).user.userId,
         appType: "gallery",
         dataType: "media_uploaded",
         data: { filename: media.filename, mimeType: media.mimeType }
@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Insights API
   app.get("/api/ai/insights", authenticateToken, async (req, res) => {
     try {
-      const learningData = await storage.getAILearningByUserId((req as any).user.userId);
+      const learningData = await storage.getAILearningByUserId(((req as any).user.userId);
       const insights = await generateAIInsights(learningData, "platform");
       res.json({ insights });
     } catch (error) {
@@ -352,7 +352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/chat", authenticateToken, async (req, res) => {
     try {
       const { message } = req.body;
-      const learningData = await storage.getAILearningByUserId((req as any).user.userId);
+      const learningData = await storage.getAILearningByUserId(((req as any).user.userId);
       
       const systemPrompt = `You are a personal AI assistant for the LOOM platform. You have access to the user's data across all applications (Notes, Calendar, Search, Mail, Chat, Gallery). Use this context to provide helpful responses. Here's what you know about the user: ${JSON.stringify(learningData.slice(-10))}`;
       
