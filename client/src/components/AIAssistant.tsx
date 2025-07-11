@@ -9,6 +9,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronUp, ChevronDown, Bot, Send, Sparkles, MessageCircle, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/hooks/useLanguage";
+import { LoomSpinner, LoomLoadingDots } from "@/components/ui/loom-spinner";
+import { BouncyButton, FloatingElement } from "@/components/ui/micro-interactions";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -86,12 +88,14 @@ export function AIAssistant() {
     <div className="fixed bottom-6 right-6 z-50">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <Button
-            size="lg"
-            className="loom-gradient shadow-lg hover:shadow-xl transition-all duration-300 rounded-full w-14 h-14"
-          >
-            <Bot className="w-6 h-6 text-white" />
-          </Button>
+          <FloatingElement>
+            <BouncyButton
+              onClick={() => setIsOpen(!isOpen)}
+              className="loom-gradient shadow-lg hover:shadow-xl transition-all duration-300 rounded-full w-14 h-14 button-bounce animate-heartbeat"
+            >
+              <Bot className="w-6 h-6 text-white icon-spin-hover" />
+            </BouncyButton>
+          </FloatingElement>
         </CollapsibleTrigger>
         <CollapsibleContent>
           <Card className="mt-4 w-96 max-h-[500px] glass-effect border-orange-200/50 shadow-2xl hover-lift scale-in">
@@ -119,7 +123,9 @@ export function AIAssistant() {
                   <span className="text-sm font-medium">{t('aiInsights')}</span>
                 </div>
                 {insightsLoading ? (
-                  <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-16 rounded-xl"></div>
+                  <div className="flex items-center justify-center h-16 rounded-xl">
+                    <LoomSpinner size="md" />
+                  </div>
                 ) : (
                   <div className="bg-white/70 dark:bg-gray-800/70 p-4 rounded-xl border border-orange-200/30 backdrop-blur-sm">
                     <div 
@@ -177,7 +183,10 @@ export function AIAssistant() {
                       {chatMutation.isPending && (
                         <div className="flex justify-start">
                           <div className="bg-white/80 dark:bg-gray-700/80 text-gray-900 dark:text-gray-100 p-3 rounded-2xl text-sm border border-gray-200/50 dark:border-gray-600/50">
-                            <div className="animate-pulse font-light">{t('loading')}</div>
+                            <div className="flex items-center space-x-2">
+                              <LoomLoadingDots />
+                              <span className="font-light">{t('loading')}</span>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -193,13 +202,17 @@ export function AIAssistant() {
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     className="rounded-xl border-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm"
                   />
-                  <Button
+                  <BouncyButton
                     onClick={handleSendMessage}
                     disabled={!message.trim() || chatMutation.isPending}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-lg rounded-xl"
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-lg rounded-xl button-bounce"
                   >
-                    <Send className="w-4 h-4" />
-                  </Button>
+                    {chatMutation.isPending ? (
+                      <LoomSpinner size="sm" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </BouncyButton>
                 </div>
               </div>
 

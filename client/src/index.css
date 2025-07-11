@@ -158,3 +158,78 @@
     transform: scale(1);
   }
 }
+
+/* Playful micro-interactions */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1s ease-in-out infinite;
+}
+
+.hover-bounce:hover {
+  animation: bounce 0.6s ease-in-out;
+}
+
+.interactive-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.interactive-card:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+.button-bounce {
+  transition: all 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.button-bounce:hover {
+  transform: scale(1.1);
+}
+
+.button-bounce:active {
+  transform: scale(0.95);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
+}
+
+.icon-spin-hover:hover {
+  animation: spin 0.8s linear infinite;
+}

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { ContextualHelp } from "@/components/ui/contextual-help";
 
 export default function Home() {
   const { user } = useAuth();
@@ -127,7 +128,15 @@ export default function Home() {
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-3 text-lg">
             <Brain className="h-5 w-5 text-orange-600" />
-            AI Clone Insights
+            <ContextualHelp 
+              helpContent={{
+                title: "AI Clone Insights",
+                content: "Your AI clone analyzes your activities across all LOOM apps to provide personalized insights and recommendations. The more you use the platform, the smarter it becomes!"
+              }}
+              trigger="hover"
+            >
+              <span>AI Clone Insights</span>
+            </ContextualHelp>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -152,13 +161,13 @@ export default function Home() {
         {apps.map((app, index) => {
           const Icon = app.icon;
           return (
-            <Card key={app.name} className="hover-lift cursor-pointer group border-0 minimal-shadow scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+            <Card key={app.name} className="interactive-card cursor-pointer group border-0 minimal-shadow scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className={`p-3 rounded-xl ${app.color} text-white shadow-lg group-hover:scale-110 smooth-transition`}>
+                  <div className={`p-3 rounded-xl ${app.color} text-white shadow-lg group-hover:scale-110 smooth-transition animate-float`}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-0 px-3 py-1 rounded-full font-medium">
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-0 px-3 py-1 rounded-full font-medium animate-heartbeat">
                     {app.count}
                   </Badge>
                 </div>
@@ -166,7 +175,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-200 smooth-transition font-light mb-4">{app.description}</p>
-                <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-lg text-white font-medium">
+                <Button asChild className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-0 shadow-lg text-white font-medium button-bounce">
                   <Link href={app.path}>
                     Open {app.name}
                     <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 smooth-transition" />

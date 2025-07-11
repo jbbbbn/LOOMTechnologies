@@ -153,11 +153,11 @@ export default function Dashboard() {
       {/* Application Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {apps.map((app, index) => (
-          <Card key={app.path} className="hover-lift cursor-pointer group border-0 minimal-shadow scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+          <Card key={app.path} className="interactive-card cursor-pointer group border-0 minimal-shadow scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 rounded-xl ${app.color} flex items-center justify-center shadow-lg group-hover:scale-110 smooth-transition`}>
+                  <div className={`w-12 h-12 rounded-xl ${app.color} flex items-center justify-center shadow-lg group-hover:scale-110 smooth-transition animate-float`}>
                     <app.icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -165,17 +165,17 @@ export default function Dashboard() {
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-light">{app.description}</p>
                   </div>
                 </div>
-                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 smooth-transition" />
+                <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 smooth-transition animate-wiggle" />
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-gray-900 dark:text-white">{app.count}</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white text-glow">{app.count}</div>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => window.location.href = app.path}
-                  className="text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg font-medium"
+                  className="text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg font-medium button-bounce"
                 >
                   Open
                 </Button>
