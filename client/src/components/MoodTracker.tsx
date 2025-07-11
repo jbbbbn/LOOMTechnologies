@@ -28,7 +28,7 @@ const moods = [
   { name: "Angry", emoji: "😡", icon: Angry, color: "text-red-500", bg: "bg-red-50 dark:bg-red-900/20" }
 ];
 
-export function MoodTracker({ className }: MoodTrackerProps) {
+export default function MoodTracker({ className }: MoodTrackerProps) {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [todaysMood, setTodaysMood] = useState<string | null>(null);
 
@@ -44,8 +44,7 @@ export function MoodTracker({ className }: MoodTrackerProps) {
 
   const moodMutation = useMutation({
     mutationFn: async ({ mood, emoji }: { mood: string; emoji: string }) => {
-      const response = await apiRequest("POST", "/api/mood", { mood, emoji });
-      return response.json();
+      return await apiRequest("/api/mood", "POST", { mood, emoji });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mood"] });

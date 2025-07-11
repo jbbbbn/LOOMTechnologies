@@ -1,8 +1,9 @@
 import { 
-  users, notes, events, searches, emails, messages, media, aiLearning, userPreferences,
+  users, notes, events, searches, emails, messages, media, aiLearning, userPreferences, moods,
   type User, type InsertUser, type Note, type InsertNote, type Event, type InsertEvent,
   type Search, type InsertSearch, type Email, type InsertEmail, type Message, type InsertMessage,
-  type Media, type InsertMedia, type AILearning, type InsertAILearning, type UserPreferences, type InsertUserPreferences
+  type Media, type InsertMedia, type AILearning, type InsertAILearning, type UserPreferences, type InsertUserPreferences,
+  type Mood, type InsertMood
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -59,6 +60,10 @@ export interface IStorage {
   createUserPreference(preference: InsertUserPreferences): Promise<UserPreferences>;
   updateUserPreference(id: number, preference: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined>;
   deleteUserPreference(id: number): Promise<boolean>;
+  
+  // Moods
+  getMoodsByUserId(userId: number): Promise<Mood[]>;
+  createMood(mood: InsertMood): Promise<Mood>;
 }
 
 export class MemStorage implements IStorage {
@@ -71,6 +76,7 @@ export class MemStorage implements IStorage {
   private media: Map<number, Media> = new Map();
   private aiLearning: Map<number, AILearning> = new Map();
   private userPreferences: Map<number, UserPreferences> = new Map();
+  private moods: Map<number, Mood> = new Map();
   
   private currentUserId = 1;
   private currentNoteId = 1;
@@ -81,6 +87,7 @@ export class MemStorage implements IStorage {
   private currentMediaId = 1;
   private currentAILearningId = 1;
   private currentUserPreferencesId = 1;
+  private currentMoodId = 1;
 
   constructor() {
     // Create a default user
@@ -361,6 +368,22 @@ export class MemStorage implements IStorage {
   async deleteUserPreference(id: number): Promise<boolean> {
     return this.userPreferences.delete(id);
   }
+
+  async getMoodsByUserId(userId: number): Promise<Mood[]> {
+    return Array.from(this.moods.values()).filter(mood => mood.userId === userId);
+  }
+
+  async createMood(insertMood: InsertMood): Promise<Mood> {
+    const id = this.currentMoodId++;
+    const mood: Mood = { 
+      id, 
+      ...insertMood,
+      note: insertMood.note || null,
+      createdAt: new Date()
+    };
+    this.moods.set(id, mood);
+    return mood;
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -576,6 +599,15 @@ export class DatabaseStorage implements IStorage {
   async deleteUserPreference(id: number): Promise<boolean> {
     const result = await db.delete(userPreferences).where(eq(userPreferences.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async getMoodsByUserId(userId: number): Promise<Mood[]> {
+    return await db.select().from(moods).where(eq(moods.userId, userId));
+  }
+
+  async createMood(insertMood: InsertMood): Promise<Mood> {
+    const [mood] = await db.insert(moods).values(insertMood).returning();
+    return mood;
   }
 }
 

@@ -236,11 +236,15 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* New Dashboard Widgets */}
-      <DashboardWidgets userPreferences={user} />
-
       {/* Mood Tracker */}
-      <MoodTracker className="mt-6" />
+      <div className="mt-8">
+        <MoodTracker />
+      </div>
+
+      {/* New Dashboard Widgets */}
+      <div className="mt-8">
+        <DashboardWidgets userPreferences={user} />
+      </div>
     </div>
   );
 }

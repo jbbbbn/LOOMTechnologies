@@ -613,7 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create rich context about user
       const userContext = {
-        notes: notes.map(n => ({ title: n.title, content: n.content.slice(0, 200) })),
+        notes: notes.map(n => ({ title: n.title, content: n.content || '' })),
         events: events.map(e => ({ title: e.title, description: e.description })),
         searches: searches.slice(-5).map(s => ({ query: s.query })),
         emails: emails.slice(-5).map(e => ({ subject: e.subject })),
@@ -659,8 +659,10 @@ IMPORTANT: If the user asks about their gallery, images, or specifically about "
 
       const systemPrompt = `You are a personal AI assistant for the LOOM platform. You analyze the user's actual data to provide personalized responses. 
 
-User's Data Context:
-- Notes: ${JSON.stringify(userContext.notes)}
+IMPORTANT: The user has real data in their notes, events, emails, and media. READ THE ACTUAL CONTENT and reference it specifically.
+
+User's Complete Data:
+- Notes with Full Content: ${JSON.stringify(userContext.notes)}
 - Events: ${JSON.stringify(userContext.events)}  
 - Recent Searches: ${JSON.stringify(userContext.searches)}
 - Recent Emails: ${JSON.stringify(userContext.emails)}
@@ -668,11 +670,58 @@ User's Data Context:
 - Activities: ${JSON.stringify(userContext.activities)}
 - Preferences: ${JSON.stringify(userContext.preferences)}
 ${galleryContext}
+${contentContext}
+
+CRITICAL INSTRUCTIONS:
+1. READ THE ACTUAL NOTE CONTENT - don't give generic responses
+2. If a user asks about music albums, movies, books, or any specific content, look in their notes for that information
+3. Reference specific details from their actual notes, emails, and other data
+4. Be specific and cite the actual content you found in their data
+5. If you find relevant information in their notes, quote it directly
+6. ESPECIALLY for questions about "music album I liked most in 2023" or similar - look in the notes content for this specific information
+7. If the user has notes with content about albums, music, movies, books - reference the exact content from their notes
 
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
       
+      // Check if user is asking about specific content in their notes
+      const isAskingAboutContent = message.toLowerCase().includes('album') ||
+                                  message.toLowerCase().includes('music') ||
+                                  message.toLowerCase().includes('movie') ||
+                                  message.toLowerCase().includes('book') ||
+                                  message.toLowerCase().includes('liked') ||
+                                  message.toLowerCase().includes('favorite') ||
+                                  message.toLowerCase().includes('2023') ||
+                                  message.toLowerCase().includes('2024');
+
+      // Enhanced content search in notes
+      let contentContext = '';
+      if (isAskingAboutContent) {
+        const relevantNotes = notes.filter(note => 
+          note.content && (
+            note.content.toLowerCase().includes('album') ||
+            note.content.toLowerCase().includes('music') ||
+            note.content.toLowerCase().includes('movie') ||
+            note.content.toLowerCase().includes('book') ||
+            note.content.toLowerCase().includes('2023') ||
+            note.content.toLowerCase().includes('2024') ||
+            note.content.toLowerCase().includes('liked') ||
+            note.content.toLowerCase().includes('favorite')
+          )
+        );
+        
+        if (relevantNotes.length > 0) {
+          contentContext = `
+          
+RELEVANT NOTES WITH CONTENT:
+${relevantNotes.map(note => `
+Note: "${note.title}"
+Content: ${note.content}
+`).join('\n')}`;
+        }
+      }
+
       // Check if the user is asking for web search (more selective)
       const needsWebSearch = message.toLowerCase().includes('search the web') || 
                            message.toLowerCase().includes('latest news') ||
@@ -794,9 +843,9 @@ Focus on providing detailed, personalized responses using the user's actual data
   // Mood tracking endpoints
   app.get("/api/mood", authenticateToken, async (req: any, res) => {
     try {
-      // For now, return mock data since we don't have mood schema
-      // In a real implementation, you'd add mood tracking to the database
-      res.json([]);
+      const userId = req.user.userId;
+      const moods = await storage.getMoodsByUserId(userId);
+      res.json(moods);
     } catch (error) {
       console.error("Mood fetch error:", error);
       res.status(500).json({ error: "Failed to fetch mood data" });
@@ -805,10 +854,17 @@ Focus on providing detailed, personalized responses using the user's actual data
 
   app.post("/api/mood", authenticateToken, async (req: any, res) => {
     try {
-      const { mood, emoji } = req.body;
-      // For now, return success since we don't have mood schema
-      // In a real implementation, you'd save to database
-      res.json({ success: true, mood, emoji });
+      const { mood, emoji, note } = req.body;
+      const userId = req.user.userId;
+      
+      const newMood = await storage.createMood({
+        userId,
+        mood,
+        emoji,
+        note
+      });
+      
+      res.json(newMood);
     } catch (error) {
       console.error("Mood save error:", error);
       res.status(500).json({ error: "Failed to save mood" });

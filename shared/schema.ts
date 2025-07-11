@@ -106,6 +106,15 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const moods = pgTable("moods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  mood: text("mood").notNull(), // 'Excellent', 'Happy', 'Neutral', 'Sad', 'Angry'
+  emoji: text("emoji").notNull(), // '😍', '😊', '😐', '😞', '😡'
+  note: text("note"), // optional note about the mood
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, updatedAt: true });
@@ -116,6 +125,7 @@ export const insertMessageSchema = createInsertSchema(messages).omit({ id: true,
 export const insertMediaSchema = createInsertSchema(media).omit({ id: true, createdAt: true });
 export const insertAILearningSchema = createInsertSchema(aiLearning).omit({ id: true, timestamp: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertMoodSchema = createInsertSchema(moods).omit({ id: true, createdAt: true });
 
 // Types
 // Relations
@@ -196,3 +206,5 @@ export type AILearning = typeof aiLearning.$inferSelect;
 export type InsertAILearning = z.infer<typeof insertAILearningSchema>;
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+export type Mood = typeof moods.$inferSelect;
+export type InsertMood = z.infer<typeof insertMoodSchema>;
