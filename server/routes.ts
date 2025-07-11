@@ -598,20 +598,20 @@ User's Data Context:
 
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
 
-If the user asks about topics that might benefit from current information or wants to learn more about something, you can also search the internet for additional context.`;
+Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
       
-      // Check if the user is asking for web search
-      const needsWebSearch = message.toLowerCase().includes('search') || 
-                           message.toLowerCase().includes('latest') ||
-                           message.toLowerCase().includes('current') ||
-                           message.toLowerCase().includes('news') ||
-                           message.toLowerCase().includes('what happened') ||
-                           message.toLowerCase().includes('tell me more');
+      // Check if the user is asking for web search (more selective)
+      const needsWebSearch = message.toLowerCase().includes('search the web') || 
+                           message.toLowerCase().includes('latest news') ||
+                           message.toLowerCase().includes('current events') ||
+                           message.toLowerCase().includes('what happened today') ||
+                           message.toLowerCase().includes('recent information') ||
+                           message.toLowerCase().includes('look up online');
       
       let response = await mistralService.generateResponse(message, systemPrompt);
       
-      // If it's a question that could benefit from web search, add web results
-      if (needsWebSearch || message.includes('?')) {
+      // Only add web search for specific requests that need current information
+      if (needsWebSearch) {
         try {
           const searchResults = await performWebSearch(message);
           if (searchResults.results.length > 0) {

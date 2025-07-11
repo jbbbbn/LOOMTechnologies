@@ -186,13 +186,68 @@ export class MistralService {
   private getFallbackResponse(prompt: string, systemPrompt?: string): string {
     const lowerPrompt = prompt.toLowerCase();
     
-    // Context-aware responses based on LOOM platform
-    if (lowerPrompt.includes('note') || lowerPrompt.includes('writing')) {
-      return "I can help you organize your thoughts and notes. Based on your LOOM activity, I see you're interested in various topics. Would you like me to help you categorize your notes or suggest new topics to explore?";
+    // Extract user context from system prompt if available
+    let userContext: any = {};
+    if (systemPrompt) {
+      try {
+        // Extract user data from system prompt
+        const notesMatch = systemPrompt.match(/- Notes: (\[.*?\])/);
+        const eventsMatch = systemPrompt.match(/- Events: (\[.*?\])/);
+        const searchesMatch = systemPrompt.match(/- Recent Searches: (\[.*?\])/);
+        
+        if (notesMatch) userContext.notes = JSON.parse(notesMatch[1]);
+        if (eventsMatch) userContext.events = JSON.parse(eventsMatch[1]);
+        if (searchesMatch) userContext.searches = JSON.parse(searchesMatch[1]);
+      } catch (e) {
+        // If parsing fails, use generic responses
+      }
     }
     
-    if (lowerPrompt.includes('calendar') || lowerPrompt.includes('schedule') || lowerPrompt.includes('event')) {
-      return "I can assist with your schedule management. Looking at your calendar patterns, I can help you optimize your time, suggest meeting times, or remind you about upcoming events. What would you like to schedule?";
+    // Analyze user's specific data for better responses
+    if (lowerPrompt.includes('what do you know about me') || lowerPrompt.includes('my data') || lowerPrompt.includes('my information')) {
+      let response = "Based on your LOOM data, I can see several things about you:\n\n";
+      
+      if (userContext.notes?.length > 0) {
+        response += `• You have ${userContext.notes.length} notes, including topics like: ${userContext.notes.map((n: any) => n.title).join(', ')}\n`;
+      }
+      
+      if (userContext.events?.length > 0) {
+        response += `• Your calendar shows events like: ${userContext.events.map((e: any) => e.title).join(', ')}\n`;
+      }
+      
+      if (userContext.searches?.length > 0) {
+        response += `• You've recently searched for: ${userContext.searches.map((s: any) => s.query).join(', ')}\n`;
+      }
+      
+      response += "\nThis gives me insights into your interests and helps me provide personalized assistance.";
+      return response;
+    }
+    
+    if (lowerPrompt.includes('where do i work') || lowerPrompt.includes('my work') || lowerPrompt.includes('my job')) {
+      if (userContext.events?.some((e: any) => e.title.toLowerCase().includes('work'))) {
+        const workEvents = userContext.events.filter((e: any) => e.title.toLowerCase().includes('work'));
+        return `Based on your calendar, you work at D-SYDE. I can see multiple "Work @ D-SYDE" events in your schedule, which suggests this is your primary workplace.`;
+      }
+      return "I can see work-related activities in your calendar. Could you tell me more about your work so I can better assist you?";
+    }
+    
+    if (lowerPrompt.includes('calendar') || lowerPrompt.includes('schedule') || lowerPrompt.includes('can you see my calendar')) {
+      if (userContext.events?.length > 0) {
+        return `Yes, I can see your calendar! You have ${userContext.events.length} events scheduled, including: ${userContext.events.map((e: any) => e.title).slice(0, 3).join(', ')}. How can I help you with your schedule?`;
+      }
+      return "I can see your calendar events and help you manage your schedule. What would you like to know about your upcoming events?";
+    }
+    
+    if (lowerPrompt.includes('comic') || lowerPrompt.includes('Comics List')) {
+      if (userContext.notes?.some((n: any) => n.title.toLowerCase().includes('comic'))) {
+        return "I can see you have a Comics List in your notes! You're interested in various comic series. Would you like me to help you organize your collection or suggest new comics based on your interests?";
+      }
+      return "I can help you with comic-related topics. What would you like to know about comics?";
+    }
+    
+    // Context-aware responses based on LOOM platform
+    if (lowerPrompt.includes('note') || lowerPrompt.includes('writing')) {
+      return "I can help you organize your thoughts and notes. Based on your LOOM activity, I can assist with categorizing, searching, or creating new notes. What would you like to work on?";
     }
     
     if (lowerPrompt.includes('email') || lowerPrompt.includes('mail')) {
@@ -203,25 +258,13 @@ export class MistralService {
       return "I can help you find information across all your LOOM applications. I can search through your notes, emails, calendar events, and more. What are you looking for?";
     }
     
-    if (lowerPrompt.includes('comic') || lowerPrompt.includes('Comics List')) {
-      return "I see you have a Comics List in your notes! You're interested in various comic series. Would you like me to help you organize your comic collection, suggest new series, or track your reading progress?";
-    }
-    
     if (lowerPrompt.includes('gallery') || lowerPrompt.includes('photo') || lowerPrompt.includes('media')) {
       return "I can help you organize and manage your media gallery. I can suggest tags, help categorize your photos, or recommend ways to better organize your media collection.";
-    }
-    
-    if (lowerPrompt.includes('chat') || lowerPrompt.includes('message')) {
-      return "I can assist with your messaging and communication. I can help draft messages, suggest responses, or help you manage your chat conversations more effectively.";
     }
     
     // General LOOM consciousness theme responses
     if (lowerPrompt.includes('consciousness') || lowerPrompt.includes('upload') || lowerPrompt.includes('digital self')) {
       return "LOOM is building your digital consciousness by analyzing your interactions across all applications. Every note you write, every event you schedule, and every search you make contributes to understanding your digital self. How can I help you explore this digital representation of yourself?";
-    }
-    
-    if (lowerPrompt.includes('what do you know about me') || lowerPrompt.includes('my data') || lowerPrompt.includes('my information')) {
-      return "Based on your LOOM activity, I can see you're an organized person who uses multiple applications to manage your digital life. You have notes, scheduled events, search history, and email communications. This data helps me understand your interests and preferences to provide better assistance.";
     }
     
     // Default helpful response

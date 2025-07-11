@@ -76,6 +76,15 @@ async function generateRealSearchResults(query: string): Promise<SearchResult[]>
     ];
   }
   
+  // For personal questions, don't provide generic results
+  if (lowerQuery.includes('what do you know about me') || 
+      lowerQuery.includes('can you see my') || 
+      lowerQuery.includes('where do i work') ||
+      lowerQuery.includes('my calendar') ||
+      lowerQuery.includes('my data')) {
+    return []; // Return empty results for personal questions
+  }
+  
   // Default historical/factual results
   return generateQuerySpecificResults(query);
 }
