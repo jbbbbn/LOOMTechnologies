@@ -733,9 +733,9 @@ Based on this real data, answer questions about the user's interests, habits, an
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
       
-      // Debug: Log user preferences for music-related questions
-      if (message.toLowerCase().includes('album') || message.toLowerCase().includes('music') || message.toLowerCase().includes('favorite')) {
-        console.log('User preferences for music question:', JSON.stringify(userContext.preferences, null, 2));
+      // Debug: Log user preferences for music/entertainment-related questions
+      if (message.toLowerCase().includes('album') || message.toLowerCase().includes('music') || message.toLowerCase().includes('favorite') || message.toLowerCase().includes('series') || message.toLowerCase().includes('tv')) {
+        console.log('User preferences for entertainment question:', JSON.stringify(userContext.preferences, null, 2));
       }
 
       // Use enhanced Ollama LangChain orchestrator for intelligent task routing
@@ -1048,6 +1048,10 @@ Focus on providing detailed, personalized responses using the user's actual data
       }},
       { pattern: /my favorite (.*?) are (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => {
         const parts = match.match(/my favorite (.*?) are (.*?)(?:\.|$|,)/);
+        return parts ? `${parts[1]}: ${parts[2]}` : match;
+      }},
+      { pattern: /my favorite (.*?) is (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => {
+        const parts = match.match(/my favorite (.*?) is (.*?)(?:\.|$|,)/);
         return parts ? `${parts[1]}: ${parts[2]}` : match;
       }}
     ];

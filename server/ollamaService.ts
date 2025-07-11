@@ -221,6 +221,26 @@ export class OllamaLangChainService {
       return "I don't know your favorite album yet. You can tell me about your music preferences and I'll remember them.";
     }
 
+    // Handle TV series questions
+    if (messageLower.includes("what's my favorite tv series") || 
+        messageLower.includes("favorite tv series") ||
+        messageLower.includes("my favorite tv series") ||
+        messageLower.includes("favorite series")) {
+      
+      if (user_context.preferences && user_context.preferences.length > 0) {
+        const favoriteTvSeries = user_context.preferences.find((pref: any) => 
+          pref.key.includes('tv_series') || pref.value.toLowerCase().includes('tv series:')
+        );
+        
+        if (favoriteTvSeries) {
+          const seriesName = favoriteTvSeries.value.replace('tv series: ', '');
+          return `Your favorite TV series is: **${seriesName}**`;
+        }
+      }
+      
+      return "I don't know your favorite TV series yet. You can tell me about your entertainment preferences and I'll remember them.";
+    }
+
     // Handle "what do you know about me" questions
     if (messageLower.includes('what do you know about me') || 
         messageLower.includes('what do you know') ||
