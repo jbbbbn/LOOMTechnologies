@@ -1,5 +1,4 @@
 import { Navigation } from "./Navigation";
-import { AIAssistant } from "./AIAssistant";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,7 +11,6 @@ export default function Layout({ children }: LayoutProps) {
       <main className="flex-1">
         {children}
       </main>
-      <AIAssistant />
     </div>
   );
 }

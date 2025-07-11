@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { 
   StickyNote, 
@@ -55,10 +55,10 @@ export function Navigation() {
                     asChild
                     className={isActive ? "bg-[var(--loom-orange)] hover:bg-[var(--loom-light)]" : ""}
                   >
-                    <a href={item.path} className="flex items-center space-x-2">
+                    <Link href={item.path} className="flex items-center space-x-2">
                       <Icon className="w-4 h-4" />
                       <span>{item.label}</span>
-                    </a>
+                    </Link>
                   </Button>
                 );
               })}
