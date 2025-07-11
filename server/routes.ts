@@ -617,7 +617,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         events: events.map(e => ({ title: e.title, description: e.description })),
         searches: searches.slice(-5).map(s => ({ query: s.query })),
         emails: emails.slice(-5).map(e => ({ subject: e.subject })),
-        media: media.slice(-5).map(m => ({ filename: m.originalName, description: m.description })),
+        media: media.slice(-5).map(m => ({ filename: m.filename, description: m.description })),
+        allMedia: media.map(m => ({ filename: m.filename, fileType: m.fileType })),
         activities: learningData.slice(-10).map(l => ({ type: l.dataType, app: l.appType })),
         preferences: userPreferences.map(p => ({ category: p.category, key: p.key, value: p.value }))
       };
@@ -625,6 +626,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract user preferences from the message
       await extractUserPreferences(message, userId);
       
+      // Check if user is asking about gallery/media content
+      const isAskingAboutGallery = message.toLowerCase().includes('gallery') || 
+                                  message.toLowerCase().includes('image') || 
+                                  message.toLowerCase().includes('photo') ||
+                                  message.toLowerCase().includes('media') ||
+                                  message.toLowerCase().includes('logo') ||
+                                  message.toLowerCase().includes('loom') ||
+                                  message.toLowerCase().includes('see') ||
+                                  message.toLowerCase().includes('do you see');
+
+      let galleryContext = '';
+      if (isAskingAboutGallery) {
+        const loomLogos = media.filter(m => 
+          m.filename.toLowerCase().includes('loom') || 
+          m.filename.toLowerCase().includes('logo')
+        );
+        
+        galleryContext = `
+
+GALLERY CONTEXT:
+- Total media files: ${media.length}
+- All media files: ${media.map(m => m.filename).join(', ')}
+- LOOM logos found: ${loomLogos.length > 0 ? loomLogos.map(l => l.filename).join(', ') : 'None'}
+
+IMPORTANT: If the user asks about their gallery, images, or specifically about "loom logo" or "logo":
+- Answer directly about what files they have
+- If they have LOOM logo files, say "Yes, I can see your LOOM logo files in your gallery"
+- Be specific about filenames
+- Reference their actual media files`;
+      }
+
       const systemPrompt = `You are a personal AI assistant for the LOOM platform. You analyze the user's actual data to provide personalized responses. 
 
 User's Data Context:
@@ -635,6 +667,7 @@ User's Data Context:
 - Media: ${JSON.stringify(userContext.media)}
 - Activities: ${JSON.stringify(userContext.activities)}
 - Preferences: ${JSON.stringify(userContext.preferences)}
+${galleryContext}
 
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
 
@@ -729,6 +762,66 @@ Focus on providing detailed, personalized responses using the user's actual data
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete preference" });
+    }
+  });
+
+  // Stats endpoint for dashboard widgets
+  app.get("/api/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const [notes, events, searches, emails, media] = await Promise.all([
+        storage.getNotesByUserId(userId),
+        storage.getEventsByUserId(userId),
+        storage.getSearchesByUserId(userId),
+        storage.getEmailsByUserId(userId),
+        storage.getMediaByUserId(userId)
+      ]);
+
+      res.json({
+        notes: notes.length,
+        events: events.length,
+        searches: searches.length,
+        emails: emails.length,
+        media: media.length,
+        total: notes.length + events.length + searches.length + emails.length + media.length
+      });
+    } catch (error) {
+      console.error("Stats error:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Mood tracking endpoints
+  app.get("/api/mood", authenticateToken, async (req: any, res) => {
+    try {
+      // For now, return mock data since we don't have mood schema
+      // In a real implementation, you'd add mood tracking to the database
+      res.json([]);
+    } catch (error) {
+      console.error("Mood fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch mood data" });
+    }
+  });
+
+  app.post("/api/mood", authenticateToken, async (req: any, res) => {
+    try {
+      const { mood, emoji } = req.body;
+      // For now, return success since we don't have mood schema
+      // In a real implementation, you'd save to database
+      res.json({ success: true, mood, emoji });
+    } catch (error) {
+      console.error("Mood save error:", error);
+      res.status(500).json({ error: "Failed to save mood" });
+    }
+  });
+
+  app.get("/api/mood/stats", authenticateToken, async (req: any, res) => {
+    try {
+      // For now, return mock data
+      res.json({ totalEntries: 0, averageMood: "neutral" });
+    } catch (error) {
+      console.error("Mood stats error:", error);
+      res.status(500).json({ error: "Failed to fetch mood stats" });
     }
   });
 

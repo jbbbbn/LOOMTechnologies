@@ -98,7 +98,7 @@ export function AIAssistant() {
           </FloatingElement>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <Card className="mt-4 w-96 max-h-[500px] glass-effect border-orange-200/50 shadow-2xl hover-lift scale-in">
+          <Card className="mt-4 w-[500px] max-h-[600px] glass-effect border-orange-200/50 shadow-2xl hover-lift scale-in">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
@@ -157,7 +157,7 @@ export function AIAssistant() {
                   )}
                 </div>
                 
-                <ScrollArea className="h-40 w-full border-0 rounded-xl p-3 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm" ref={scrollAreaRef}>
+                <ScrollArea className="h-64 w-full border-0 rounded-xl p-3 bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm" ref={scrollAreaRef}>
                   {chatHistory.length === 0 ? (
                     <div className="text-sm text-gray-500 text-center py-8 font-light">
                       {t('askAnything')}

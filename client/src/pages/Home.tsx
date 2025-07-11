@@ -146,12 +146,22 @@ export default function Home() {
           </div>
           
           <div className="p-4 bg-white/70 dark:bg-gray-800/70 rounded-xl border border-orange-200/30 backdrop-blur-sm">
-            <div 
-              className="prose prose-sm max-w-none dark:prose-invert"
-              dangerouslySetInnerHTML={{
-                __html: insights?.insights || "Your AI clone is initializing. Start using LOOM apps to build your digital helper profile."
-              }}
-            />
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              {insights?.insights ? (
+                <div 
+                  dangerouslySetInnerHTML={{ 
+                    __html: insights.insights
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                      .replace(/#{3}\s*(.*?)(?=\n|$)/g, '<h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">$1</h3>')
+                      .replace(/#{2}\s*(.*?)(?=\n|$)/g, '<h2 class="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">$1</h2>')
+                      .replace(/#{1}\s*(.*?)(?=\n|$)/g, '<h1 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">$1</h1>')
+                  }}
+                />
+              ) : (
+                'Your AI clone is initializing. Start using LOOM apps to build your digital helper profile.'
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
