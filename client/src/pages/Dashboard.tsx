@@ -113,10 +113,10 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {user?.username || user?.email?.split('@')[0]}
+              Welcome back, {user?.username || user?.firstName || user?.email?.split('@')[0]}
             </h1>
             <p className="text-gray-600 mt-2">
-              Your digital consciousness is actively learning and evolving
+              Your AI clone is actively learning and evolving to help you better
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -128,32 +128,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Consciousness Progress */}
-      <Card className="mb-8 bg-gradient-to-r from-[var(--loom-orange)]/10 to-orange-50 border-[var(--loom-orange)]/20">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Brain className="w-6 h-6 text-[var(--loom-orange)]" />
-            <span>Digital Consciousness Progress</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-sm text-gray-600">
-                {totalActivity} activities recorded across all applications
-              </p>
-              <p className="text-2xl font-bold text-[var(--loom-orange)]">
-                {consciousnessProgress.toFixed(0)}% Complete
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Next milestone</p>
-              <p className="font-semibold">{50 - totalActivity} activities to go</p>
-            </div>
-          </div>
-          <Progress value={consciousnessProgress} className="h-3" />
-        </CardContent>
-      </Card>
+
 
       {/* AI Insights */}
       {insights && (
@@ -165,7 +140,12 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 whitespace-pre-wrap">{insights.insights}</p>
+            <div 
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: insights.insights
+              }}
+            />
           </CardContent>
         </Card>
       )}

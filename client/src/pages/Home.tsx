@@ -115,10 +115,10 @@ export default function Home() {
           Welcome to LOOM
         </h1>
         <p className="text-xl text-muted-foreground">
-          Your consciousness uploading and digital twin platform
+          Your AI clone helper platform
         </p>
         <p className="text-sm text-muted-foreground">
-          Hello, {user?.email} - Your AI is learning from your activities across all apps
+          Hello, {user?.username || user?.firstName || user?.email?.split('@')[0]} - Your AI clone is learning from your activities across all apps
         </p>
       </div>
 
@@ -127,35 +127,25 @@ export default function Home() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-6 w-6 text-orange-600" />
-            AI Consciousness Insights
+            AI Clone Insights
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-green-500" />
-            <span className="text-sm text-green-600">Digital Twin Learning Active</span>
+            <span className="text-sm text-green-600">AI Clone Learning Active</span>
           </div>
           
           <div className="p-4 bg-white rounded-lg border border-orange-200">
-            <p className="text-sm text-gray-700">
-              {insights?.insights || "Your AI is initializing. Start using LOOM apps to build your digital consciousness profile."}
-            </p>
+            <div 
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: insights?.insights || "Your AI clone is initializing. Start using LOOM apps to build your digital helper profile."
+              }}
+            />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-orange-500" />
-              <span className="text-sm font-medium">Consciousness Upload Progress</span>
-            </div>
-            <Badge variant="secondary">
-              {Math.min(100, ((notes.length + events.length + searches.length + emails.length + media.length) * 5))}%
-            </Badge>
-          </div>
-          
-          <Progress 
-            value={Math.min(100, ((notes.length + events.length + searches.length + emails.length + media.length) * 5))} 
-            className="h-2"
-          />
+
         </CardContent>
       </Card>
 

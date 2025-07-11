@@ -297,7 +297,7 @@ export class MistralService {
     const appTypes = [...new Set(recentData.map(item => item.appType))];
     const dataTypes = [...new Set(recentData.map(item => item.dataType))];
     
-    let insights = "<h3>🧠 Your LOOM Activity Summary</h3><br>";
+    let insights = "<h3>🧠 Your LOOM Activity Summary</h3>";
     
     // Analyze app usage patterns
     const appUsage = appTypes.reduce((acc, app) => {
@@ -307,43 +307,43 @@ export class MistralService {
     
     const mostUsedApp = Object.entries(appUsage).sort(([,a], [,b]) => b - a)[0];
     if (mostUsedApp) {
-      insights += `🎯 <strong>Most Active</strong>: You're most engaged with ${mostUsedApp[0]} (${mostUsedApp[1]} activities)<br><br>`;
+      insights += `<p>🎯 <strong>Most Active</strong>: You're most engaged with ${mostUsedApp[0]} (${mostUsedApp[1]} activities)</p>`;
     }
     
     // Analyze specific activities
     if (recentData.some(item => item.dataType === 'note_created')) {
-      insights += `📝 <strong>Note Taking</strong>: You're actively creating notes, showing good information management habits<br><br>`;
+      insights += `<p>📝 <strong>Note Taking</strong>: You're actively creating notes, showing good information management habits</p>`;
     }
     
     if (recentData.some(item => item.dataType === 'event_created')) {
-      insights += `📅 <strong>Schedule Management</strong>: You're organizing your time well by creating calendar events<br><br>`;
+      insights += `<p>📅 <strong>Schedule Management</strong>: You're organizing your time well by creating calendar events</p>`;
     }
     
     if (recentData.some(item => item.dataType === 'search_performed')) {
       const searches = recentData.filter(item => item.dataType === 'search_performed');
-      insights += `🔍 <strong>Information Seeking</strong>: You've performed ${searches.length} searches, showing curiosity and research habits<br><br>`;
+      insights += `<p>🔍 <strong>Information Seeking</strong>: You've performed ${searches.length} searches, showing curiosity and research habits</p>`;
     }
     
     if (recentData.some(item => item.dataType === 'email_created')) {
-      insights += `📧 <strong>Communication</strong>: You're actively managing your email communications<br><br>`;
+      insights += `<p>📧 <strong>Communication</strong>: You're actively managing your email communications</p>`;
     }
     
     // Provide actionable suggestions
-    insights += "<h3>💡 Suggestions for Better Experience</h3><br>";
+    insights += "<h3>💡 Suggestions for Better Experience</h3>";
     
     if (!appTypes.includes('gallery')) {
-      insights += "📸 Consider using the Gallery to organize your media files<br><br>";
+      insights += "<p>📸 Consider using the Gallery to organize your media files</p>";
     }
     
     if (!appTypes.includes('chat')) {
-      insights += "💬 Try the Chat feature for real-time communication<br><br>";
+      insights += "<p>💬 Try the Chat feature for real-time communication</p>";
     }
     
     if (appTypes.length < 3) {
-      insights += "🚀 Explore more LOOM applications to get a complete digital consciousness experience<br><br>";
+      insights += "<p>🚀 Explore more LOOM applications to get a complete AI clone experience</p>";
     }
     
-    insights += "🧠 <strong><em>Your digital consciousness is growing stronger with each interaction!</em></strong>";
+    insights += "<p>🧠 <strong><em>Your AI clone is growing stronger with each interaction!</em></strong></p>";
     
     return insights;
   }

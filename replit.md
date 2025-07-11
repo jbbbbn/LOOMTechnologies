@@ -82,6 +82,13 @@ Preferred communication style: Simple, everyday language.
   - English, Spanish, and French translations implemented across all components
   - Dynamic language switching with localStorage persistence
   - Improved AI Assistant interface with proper HTML formatting and dark theme support
+  - **Platform Messaging Update**: Changed from "consciousness upload" to "AI clone helper" concept
+  - Removed consciousness upload progress bars from Home and Dashboard pages
+  - Updated all references to focus on AI clone assistance rather than consciousness uploading
+  - User display now shows names (username/firstName) instead of email addresses
+  - **AI Insights Display Fix**: Fixed HTML tag rendering issue in AI insights
+  - AI insights now display proper HTML formatting with headings, bold text, and structured content
+  - Removed raw HTML tags from being displayed as text content
 
 ## System Architecture
 

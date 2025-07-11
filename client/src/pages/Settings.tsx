@@ -269,15 +269,15 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Brain className="w-5 h-5" />
-              <span>AI & Consciousness</span>
+              <span>AI & Clone Learning</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="consciousness">Digital Consciousness</Label>
+                <Label htmlFor="consciousness">AI Clone Learning</Label>
                 <p className="text-sm text-gray-500">
-                  Allow LOOM to build your digital consciousness profile
+                  Allow LOOM to build your AI clone helper profile
                 </p>
               </div>
               <Switch 
@@ -324,11 +324,11 @@ export default function Settings() {
                 <div className="flex items-center space-x-2">
                   <Brain className="w-5 h-5 text-orange-600" />
                   <Badge variant="outline" className="text-orange-600 border-orange-600">
-                    Consciousness Active
+                    AI Clone Active
                   </Badge>
                 </div>
                 <p className="text-sm text-orange-700 mt-2">
-                  Your digital consciousness is learning from your interactions across all LOOM applications.
+                  Your AI clone is learning from your interactions across all LOOM applications.
                 </p>
               </div>
             )}
