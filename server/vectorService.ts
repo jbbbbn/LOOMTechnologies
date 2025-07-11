@@ -34,6 +34,7 @@ export class VectorMemoryService {
     await db.insert(aiLearning).values({
       userId,
       appType: 'vector_memory',
+      dataType: 'vector_memory',
       data: { content, metadata, timestamp: memory.timestamp }
     });
 
@@ -140,7 +141,7 @@ export class LangChainVectorOrchestrator {
     }
 
     // 5. Store interaction in vector memory
-    await this.vectorMemory.storeMemory(userId, message, {
+    await this.vectorMemory.storeMemory(userId, `${message} -> ${response}`, {
       response,
       task_type: taskType,
       tools_used: toolsUsed,
