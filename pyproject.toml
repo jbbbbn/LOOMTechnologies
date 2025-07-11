@@ -6,12 +6,15 @@ requires-python = ">=3.11"
 dependencies = [
     "chromadb>=1.0.15",
     "fastapi>=0.116.1",
+    "langchain-core>=0.3.68",
     "langchain>=0.3.26",
     "langchain-community>=0.3.27",
     "pillow>=11.3.0",
     "python-dotenv>=1.1.1",
     "requests>=2.32.4",
     "uvicorn>=0.35.0",
+    "ollama>=0.5.1",
+    "tavily-python>=0.7.9",
 ]
 
 [[tool.uv.index]]

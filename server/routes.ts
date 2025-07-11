@@ -8,6 +8,7 @@ import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
 import { aiSquad, AIServiceType } from "./aiSquad";
 import { langchainOrchestrator } from "./langchainService";
+import { ollamaLangChainService } from "./ollamaService";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema, insertUserPreferencesSchema, insertMoodSchema, insertTimeTrackingSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -737,8 +738,8 @@ Focus on providing detailed, personalized responses using the user's actual data
         console.log('User preferences for music question:', JSON.stringify(userContext.preferences, null, 2));
       }
 
-      // Use LangChain orchestrator for intelligent task routing
-      const aiResponse = await langchainOrchestrator.orchestrateTask(
+      // Use enhanced Ollama LangChain orchestrator for intelligent task routing
+      const aiResponse = await ollamaLangChainService.orchestrateTask(
         message,
         userId,
         userContext
@@ -1044,6 +1045,10 @@ Focus on providing detailed, personalized responses using the user's actual data
       { pattern: /(.*?) is my favorite (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => {
         const parts = match.match(/(.*?) is my favorite (.*?)(?:\.|$|,)/);
         return parts ? `${parts[2]}: ${parts[1]}` : match;
+      }},
+      { pattern: /my favorite (.*?) are (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => {
+        const parts = match.match(/my favorite (.*?) are (.*?)(?:\.|$|,)/);
+        return parts ? `${parts[1]}: ${parts[2]}` : match;
       }}
     ];
 

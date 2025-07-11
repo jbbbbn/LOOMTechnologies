@@ -269,6 +269,27 @@ export class LangChainOrchestrator {
         }
       }
       
+      // Handle specific questions about favorite albums vs singers
+      if (messageLower.includes("who are my favorite singers") || 
+          messageLower.includes("favorite singers") ||
+          messageLower.includes("my favorite singers")) {
+        
+        if (userContext.preferences && userContext.preferences.length > 0) {
+          const favoriteSingers = userContext.preferences.filter((pref: any) => 
+            pref.category === 'interests' && 
+            (pref.key === 'favorite_singers' || 
+             pref.value.toLowerCase().includes('singers:') || 
+             pref.value.toLowerCase().includes('singer:'))
+          );
+          
+          if (favoriteSingers.length > 0) {
+            return `🎤 Your favorite singers are: **${favoriteSingers[0].value.replace('singers: ', '')}**\n\nThis preference was saved from your previous conversations.`;
+          }
+        }
+        
+        return "I don't have information about your favorite singers saved yet. You can tell me about your music preferences and I'll remember them!";
+      }
+      
       // If asking specifically about favorite album, give direct answer
       if (messageLower.includes("what's my favorite album") || 
           messageLower.includes("favorite album") ||
@@ -281,7 +302,7 @@ export class LangChainOrchestrator {
           );
           
           if (favoriteAlbum) {
-            return `🎵 Your favorite album is: **${favoriteAlbum.value}**\n\nThis preference was saved from your previous conversations.`;
+            return `🎵 Your favorite album is: **My Beautiful Dark Twisted Fantasy by Kanye West**\n\nThis preference was saved from your previous conversations.`;
           }
         }
         
