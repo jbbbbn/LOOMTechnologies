@@ -164,6 +164,26 @@ export default function Calendar() {
     });
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/events/${id}`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({ title: "Event deleted successfully!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete event", variant: "destructive" });
+    },
+  });
+
+  const handleDeleteEvent = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this event?")) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -496,6 +516,14 @@ export default function Calendar() {
                           onClick={() => handleUpdateEventStatus(event.id, "postponed")}
                         >
                           ⏰ Postpone
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          className="text-xs px-2 py-1 h-6"
+                          onClick={() => handleDeleteEvent(event.id)}
+                        >
+                          🗑️ Delete
                         </Button>
                       </div>
                     </div>

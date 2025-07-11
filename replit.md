@@ -29,6 +29,14 @@ Preferred communication style: Simple, everyday language.
   - Restructured navigation: Dashboard, AI Assistant, then all LOOM apps
   - AI now recognizes user interests from actual notes and activities
   - Removed AI Assistant from app cards, moved to primary navigation
+  - **Latest**: Added AI interrupt functionality to stop lengthy processing
+  - Added delete buttons to Calendar events and Mail emails
+  - Created comprehensive LOOM Chat system with Telegram-style interface
+  - Added real-time messaging with WebSocket support
+  - Implemented room-based chat (public channels, direct messages)
+  - Added member count and online status indicators
+  - Gallery upload system fully functional with file preview
+  - All core features now have complete CRUD operations
 
 ## System Architecture
 

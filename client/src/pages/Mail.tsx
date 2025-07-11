@@ -67,6 +67,27 @@ export default function Mail() {
     setIsViewOpen(true);
   };
 
+  const deleteEmailMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await apiRequest("DELETE", `/api/emails/${id}`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/emails"] });
+      toast({ title: "Email deleted successfully!" });
+      setIsViewOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Failed to delete email", variant: "destructive" });
+    },
+  });
+
+  const handleDeleteEmail = (id: number) => {
+    if (window.confirm("Are you sure you want to delete this email?")) {
+      deleteEmailMutation.mutate(id);
+    }
+  };
+
   const filteredEmails = emails.filter(email =>
     email.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     email.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -306,6 +327,13 @@ export default function Mail() {
                   <Button variant="outline">
                     <Archive className="w-4 h-4 mr-2" />
                     Archive
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={() => handleDeleteEmail(selectedEmail.id)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
                   </Button>
                 </div>
               </div>

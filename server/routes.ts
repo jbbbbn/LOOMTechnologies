@@ -448,6 +448,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/emails/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteEmail(id);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Email not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Email deletion error:", error);
+      res.status(500).json({ error: "Failed to delete email" });
+    }
+  });
+
   // Messages API
   app.get("/api/messages/:roomId", authenticateToken, async (req, res) => {
     try {
@@ -586,6 +602,16 @@ Based on this real data, answer questions about the user's interests, habits, an
     } catch (error) {
       console.error("AI chat error:", error);
       res.status(500).json({ error: "AI chat failed" });
+    }
+  });
+
+  app.post("/api/ai/interrupt", authenticateToken, async (req, res) => {
+    try {
+      aiService.interrupt();
+      res.json({ success: true, message: "AI processing interrupted" });
+    } catch (error) {
+      console.error("AI interrupt error:", error);
+      res.status(500).json({ error: "Failed to interrupt AI" });
     }
   });
 

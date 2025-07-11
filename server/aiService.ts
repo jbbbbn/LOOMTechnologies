@@ -6,6 +6,7 @@ const execAsync = promisify(exec);
 export class OllamaService {
   private modelName = 'llama3.2:3b';
   private isModelPulled = false;
+  private isInterrupted = false;
 
   async ensureModelAvailable(): Promise<void> {
     if (this.isModelPulled) return;
@@ -42,11 +43,18 @@ export class OllamaService {
   }
 
   async generateResponse(prompt: string, systemPrompt?: string): Promise<string> {
+    this.isInterrupted = false;
+    
     try {
+      // Check for interrupt during processing
+      if (this.isInterrupted) {
+        return "Response interrupted by user.";
+      }
+      
       // Try Ollama first if available, then use intelligent fallback
       await this.ensureModelAvailable();
       
-      if (this.isModelPulled) {
+      if (this.isModelPulled && !this.isInterrupted) {
         const fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser: ${prompt}` : prompt;
         
         const ollamaPayload = {
@@ -58,7 +66,7 @@ export class OllamaService {
         const { stdout } = await execAsync(`curl -s -X POST http://localhost:11434/api/generate -d '${JSON.stringify(ollamaPayload).replace(/'/g, "\\'")}'`);
         const response = JSON.parse(stdout);
         
-        if (response.response && response.response.length > 20) {
+        if (response.response && response.response.length > 20 && !this.isInterrupted) {
           return response.response;
         }
       }
@@ -69,6 +77,10 @@ export class OllamaService {
       console.log('Using enhanced AI fallback responses...');
       return this.getFallbackResponse(prompt, systemPrompt);
     }
+  }
+
+  interrupt(): void {
+    this.isInterrupted = true;
   }
   
   private getFallbackResponse(prompt: string, systemPrompt?: string): string {

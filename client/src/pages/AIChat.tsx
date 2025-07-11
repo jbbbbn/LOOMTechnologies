@@ -33,6 +33,17 @@ export default function AIChat() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const interruptMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/ai/interrupt", {});
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsLoading(false);
+      toast({ title: "AI processing interrupted" });
+    },
+  });
+
   const { data: insights } = useQuery({
     queryKey: ["/api/ai/insights"],
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -223,13 +234,23 @@ export default function AIChat() {
                   placeholder="Ask me anything about your LOOM activities..."
                   disabled={isLoading}
                 />
-                <Button 
-                  onClick={handleSend} 
-                  disabled={!input.trim() || isLoading}
-                  size="icon"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+                {isLoading ? (
+                  <Button
+                    onClick={() => interruptMutation.mutate()}
+                    variant="destructive"
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Stop
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={handleSend} 
+                    disabled={!input.trim()}
+                    size="icon"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
