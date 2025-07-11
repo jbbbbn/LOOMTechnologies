@@ -694,6 +694,14 @@ IMPORTANT: If the user asks about their gallery, images, or specifically about "
 - Reference their actual media files`;
       }
 
+      // Check if the user is asking for web search (more selective)
+      const needsWebSearch = message.toLowerCase().includes('search the web') || 
+                           message.toLowerCase().includes('latest news') ||
+                           message.toLowerCase().includes('current events') ||
+                           message.toLowerCase().includes('what happened today') ||
+                           message.toLowerCase().includes('recent information') ||
+                           message.toLowerCase().includes('look up online');
+
       const systemPrompt = `You are a personal AI assistant for the LOOM platform. You analyze the user's actual data to provide personalized responses. 
 
 IMPORTANT: The user has real data in their notes, events, emails, and media. READ THE ACTUAL CONTENT and reference it specifically.
@@ -721,14 +729,6 @@ CRITICAL INSTRUCTIONS:
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
-
-      // Check if the user is asking for web search (more selective)
-      const needsWebSearch = message.toLowerCase().includes('search the web') || 
-                           message.toLowerCase().includes('latest news') ||
-                           message.toLowerCase().includes('current events') ||
-                           message.toLowerCase().includes('what happened today') ||
-                           message.toLowerCase().includes('recent information') ||
-                           message.toLowerCase().includes('look up online');
       
       let response = await mistralService.generateResponse(message, systemPrompt);
       
