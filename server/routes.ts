@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { aiService } from "./aiService";
+import { gpt4allService } from "./gpt4allService";
 import { storage } from "./storage";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
@@ -114,7 +115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to generate AI insights
   async function generateAIInsights(data: any, appType: string): Promise<string> {
     try {
-      return await aiService.generateInsights(data, appType);
+      return await gpt4allService.generateInsights(data, appType);
     } catch (error) {
       console.error("AI insights error:", error);
       return "AI insights temporarily unavailable";
@@ -596,7 +597,7 @@ User's Data Context:
 
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.`;
       
-      const response = await aiService.generateResponse(message, systemPrompt);
+      const response = await gpt4allService.generateResponse(message, systemPrompt);
       
       res.json({ response });
     } catch (error) {
@@ -607,8 +608,8 @@ Based on this real data, answer questions about the user's interests, habits, an
 
   app.post("/api/ai/interrupt", authenticateToken, async (req, res) => {
     try {
-      aiService.interrupt();
-      res.json({ success: true, message: "AI processing interrupted" });
+      gpt4allService.interrupt();
+      res.json({ success: true, message: "GPT4All processing interrupted" });
     } catch (error) {
       console.error("AI interrupt error:", error);
       res.status(500).json({ error: "Failed to interrupt AI" });
