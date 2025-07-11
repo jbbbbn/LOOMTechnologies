@@ -10,7 +10,8 @@ import {
   Home,
   Bell,
   User,
-  LogOut
+  LogOut,
+  Bot
 } from "lucide-react";
 import loomLogo from "@assets/LOOM_logo_2_1752244843559.jpg";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,6 +28,7 @@ export function Navigation() {
     { path: "/mail", label: "Mail", icon: Mail },
     { path: "/chat", label: "Chat", icon: MessageCircle },
     { path: "/gallery", label: "Gallery", icon: Images },
+    { path: "/ai", label: "AI Assistant", icon: Bot },
   ];
 
   return (

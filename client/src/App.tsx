@@ -13,6 +13,7 @@ import Mail from "@/pages/Mail";
 import Chat from "@/pages/Chat";
 import Gallery from "@/pages/Gallery";
 import Login from "@/pages/Login";
+import AIChat from "@/pages/AIChat";
 import NotFound from "@/pages/not-found";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/mail" component={Mail} />
         <Route path="/chat" component={Chat} />
         <Route path="/gallery" component={Gallery} />
+        <Route path="/ai" component={AIChat} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

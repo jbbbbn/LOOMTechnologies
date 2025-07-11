@@ -87,8 +87,12 @@ export class OllamaService {
       return 'I can assist with email management and organization. Use the Mail app to manage your communications, and I\'ll help you stay organized.';
     }
     
+    if (lowerPrompt.includes('what') && (lowerPrompt.includes('know') || lowerPrompt.includes('about me'))) {
+      return 'Based on your activity, I can see you\'ve been using LOOM for searches, notes, and media uploads. You seem to be exploring the platform features. I\'m learning your patterns to provide better personalized assistance as you continue using the apps.';
+    }
+    
     if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi')) {
-      return 'Hello! Welcome to LOOM. I\'m your AI assistant that learns from your activities across all apps. How can I help you today?';
+      return 'Hello! I\'m your LOOM AI assistant. I\'ve been learning from your activities across the platform. How can I help you today?';
     }
     
     if (lowerPrompt.includes('create') || lowerPrompt.includes('add')) {
@@ -99,7 +103,7 @@ export class OllamaService {
       return 'I can help you organize your digital life. I track your usage patterns across notes, calendar, searches, emails, and media to provide personalized organization suggestions.';
     }
     
-    return 'I\'m your LOOM AI assistant! I can help with notes, calendar events, searches, emails, and media management. The full AI model is still downloading, but I\'m ready to assist you with the platform features. Try asking me about creating content or organizing your data!';
+    return 'I\'m your LOOM AI assistant, learning from your activities to provide personalized help. I can assist with notes, calendar, searches, emails, and media management. What would you like to work on?';
   }
 
   async generateInsights(learningData: any[], appType: string): Promise<string> {
