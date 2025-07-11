@@ -636,6 +636,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                   message.toLowerCase().includes('see') ||
                                   message.toLowerCase().includes('do you see');
 
+      // Check if user is asking about specific content in their notes
+      const isAskingAboutContent = message.toLowerCase().includes('album') ||
+                                  message.toLowerCase().includes('music') ||
+                                  message.toLowerCase().includes('movie') ||
+                                  message.toLowerCase().includes('book') ||
+                                  message.toLowerCase().includes('liked') ||
+                                  message.toLowerCase().includes('favorite') ||
+                                  message.toLowerCase().includes('2023') ||
+                                  message.toLowerCase().includes('2024');
+
+      // Enhanced content search in notes
+      let contentContext = '';
+      if (isAskingAboutContent) {
+        const relevantNotes = notes.filter(note => 
+          note.content && (
+            note.content.toLowerCase().includes('album') ||
+            note.content.toLowerCase().includes('music') ||
+            note.content.toLowerCase().includes('movie') ||
+            note.content.toLowerCase().includes('book') ||
+            note.content.toLowerCase().includes('2023') ||
+            note.content.toLowerCase().includes('2024') ||
+            note.content.toLowerCase().includes('liked') ||
+            note.content.toLowerCase().includes('favorite')
+          )
+        );
+        
+        if (relevantNotes.length > 0) {
+          contentContext = `
+          
+RELEVANT NOTES WITH CONTENT:
+${relevantNotes.map(note => `
+Note: "${note.title}"
+Content: ${note.content}
+`).join('\n')}`;
+        }
+      }
+
       let galleryContext = '';
       if (isAskingAboutGallery) {
         const loomLogos = media.filter(m => 
@@ -684,43 +721,6 @@ CRITICAL INSTRUCTIONS:
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
-      
-      // Check if user is asking about specific content in their notes
-      const isAskingAboutContent = message.toLowerCase().includes('album') ||
-                                  message.toLowerCase().includes('music') ||
-                                  message.toLowerCase().includes('movie') ||
-                                  message.toLowerCase().includes('book') ||
-                                  message.toLowerCase().includes('liked') ||
-                                  message.toLowerCase().includes('favorite') ||
-                                  message.toLowerCase().includes('2023') ||
-                                  message.toLowerCase().includes('2024');
-
-      // Enhanced content search in notes
-      let contentContext = '';
-      if (isAskingAboutContent) {
-        const relevantNotes = notes.filter(note => 
-          note.content && (
-            note.content.toLowerCase().includes('album') ||
-            note.content.toLowerCase().includes('music') ||
-            note.content.toLowerCase().includes('movie') ||
-            note.content.toLowerCase().includes('book') ||
-            note.content.toLowerCase().includes('2023') ||
-            note.content.toLowerCase().includes('2024') ||
-            note.content.toLowerCase().includes('liked') ||
-            note.content.toLowerCase().includes('favorite')
-          )
-        );
-        
-        if (relevantNotes.length > 0) {
-          contentContext = `
-          
-RELEVANT NOTES WITH CONTENT:
-${relevantNotes.map(note => `
-Note: "${note.title}"
-Content: ${note.content}
-`).join('\n')}`;
-        }
-      }
 
       // Check if the user is asking for web search (more selective)
       const needsWebSearch = message.toLowerCase().includes('search the web') || 
