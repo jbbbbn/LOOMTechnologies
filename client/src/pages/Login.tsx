@@ -45,7 +45,8 @@ export default function Login() {
         title: isSignUp ? "Account created successfully!" : "Welcome back!",
         description: isSignUp ? "You can now start building your digital twin." : "Let's continue building your consciousness profile.",
       });
-      setLocation("/");
+      // Force a page reload to ensure auth state is properly updated
+      window.location.href = "/";
     },
     onError: (error: any) => {
       toast({
