@@ -1,0 +1,108 @@
+> rest-express@1.0.0 dev
+Mistral AI service initialized successfully
+9:19:10 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+9:19:15 PM [express] GET /api/auth/me 304 in 120ms :: {"id":1,"email":"ziocantonese@gmail.com","user…
+9:19:15 PM [express] GET /api/time-tracking 304 in 25ms :: []
+9:19:15 PM [express] GET /api/notes 304 in 26ms :: [{"id":1,"userId":1,"title":"Comics List","conten…
+9:19:15 PM [express] GET /api/mood 304 in 98ms :: [{"id":1,"userId":1,"mood":"Happy","emoji":"😊","n…
+9:19:15 PM [express] GET /api/emails 304 in 99ms :: [{"id":1,"userId":1,"subject":"LOOM Test","conte…
+9:19:15 PM [express] GET /api/events 304 in 104ms :: []
+9:19:15 PM [express] GET /api/searches 304 in 103ms :: [{"id":1,"userId":1,"query":"youtube","result…
+9:19:15 PM [express] GET /api/ai/insights 304 in 44ms :: {"insights":"<h3>🧠 Your LOOM Activity Summ…
+9:19:15 PM [express] GET /api/media 304 in 85ms :: [{"id":3,"userId":1,"filename":"1752257733531_LOO…
+9:19:46 PM [express] GET /api/time-tracking 304 in 130ms :: []
+9:19:46 PM [express] GET /api/mood 304 in 24ms :: [{"id":1,"userId":1,"mood":"Happy","emoji":"😊","n…
+9:20:17 PM [express] GET /api/time-tracking 304 in 109ms :: []
+9:20:17 PM [express] GET /api/mood 304 in 22ms :: [{"id":1,"userId":1,"mood":"Happy","emoji":"😊","n…
+9:20:48 PM [express] GET /api/time-tracking 304 in 103ms :: []
+9:20:48 PM [express] GET /api/mood 304 in 25ms :: [{"id":1,"userId":1,"mood":"Happy","emoji":"😊","n…
+Time tracking save error: ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "number",
+    "received": "undefined",
+    "path": [
+      "userId"
+    ],
+    "message": "Required"
+  }
+]
+    at get error [as error] (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:587:31)
+    at ZodObject.parse (file:///home/runner/workspace/node_modules/zod/lib/index.mjs:663:22)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:903:54)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:41:5)
+    at /home/runner/workspace/node_modules/jsonwebtoken/verify.js:261:12
+    at getSecret (/home/runner/workspace/node_modules/jsonwebtoken/verify.js:97:14)
+    at module.exports [as verify] (/home/runner/workspace/node_modules/jsonwebtoken/verify.js:101:10)
+    at authenticateToken (/home/runner/workspace/server/routes.ts:36:7)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at <anonymous> (/home/runner/workspace/server/index.ts:36:3)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at urlencodedParser (/home/runner/workspace/node_modules/body-parser/lib/types/urlencoded.js:85:7)
+    at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/home/runner/workspace/node_modules/express/lib/router/index.js:328:13)
+    at /home/runner/workspace/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+    at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+    at /home/runner/workspace/node_modules/body-parser/lib/read.js:137:5
+    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    at invokeCallback (/home/runner/workspace/node_modules/raw-body/index.js:238:16)
+    at done (/home/runner/workspace/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/runner/workspace/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:518:28)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  issues: [
+    {
+      code: 'invalid_type',
+      expected: 'number',
+      received: 'undefined',
+      path: [Array],
+      message: 'Required'
+    }
+  ],
+  addIssue: [Function (anonymous)],
+  addIssues: [Function (anonymous)],
+  errors: [
+    {
+      code: 'invalid_type',
+      expected: 'number',
+      received: 'undefined',
+      path: [Array],
+      message: 'Required'
+    }
+  ]
+}
+9:20:49 PM [express] POST /api/time-tracking 500 in 12ms :: {"error":"Failed to save time tracking d…
+9:21:18 PM [express] GET /api/time-tracking 200 in 96ms :: []
+9:21:18 PM [express] GET /api/mood 304 in 23ms :: [{"id":1,"userId":1,"mood":"Happy","emoji":"😊","n…
+🚀 Using Python AI Assistant Service (LangChain + Ollama + ChromaDB)
+AI chat error: TypeError: fetch failed
+    at node:internal/deps/undici/undici:13392:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:744:24) {
+  [cause]: Error: connect ECONNREFUSED 127.0.0.1:8001
+      at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '127.0.0.1',
+    port: 8001
+  }
+}
+9:21:19 PM [express] POST /api/ai/chat 500 in 220ms :: {"error":"AI chat failed"}

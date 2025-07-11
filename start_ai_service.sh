@@ -1,24 +1,18 @@
 #!/bin/bash
 
-# Start LOOM AI Orchestration Service
-echo "🚀 Starting LOOM AI Orchestration Service..."
+# Kill any existing Python AI service
+pkill -f "python.*simple_ai" 2>/dev/null || true
+sleep 2
 
-# Install Ollama if not already installed
-if ! command -v ollama &> /dev/null; then
-    echo "📦 Installing Ollama..."
-    curl -fsSL https://ollama.com/install.sh | sh
+# Start the Python AI service in the background
+cd ai_assistant
+nohup python3 simple_ai.py > service.log 2>&1 &
+sleep 3
+
+# Check if service is running
+if curl -s http://localhost:8001/health > /dev/null; then
+    echo "🚀 Python AI Service started successfully on port 8001"
+else
+    echo "❌ Failed to start Python AI Service"
+    exit 1
 fi
-
-# Start Ollama service in background
-echo "🦙 Starting Ollama service..."
-ollama serve &
-
-# Pull required models
-echo "📥 Pulling AI models..."
-ollama pull llama3.2:3b
-ollama pull mistral:7b
-
-# Start the Python AI service
-echo "🧠 Starting LangChain AI service..."
-cd python_ai_service
-python main.py
