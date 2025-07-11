@@ -57,6 +57,16 @@ export default function Home() {
     retry: false,
   });
 
+  const { data: timeEntries = [] } = useQuery({
+    queryKey: ["/api/time-tracking"],
+    retry: false,
+  });
+
+  const { data: moodEntries = [] } = useQuery({
+    queryKey: ["/api/mood"],
+    retry: false,
+  });
+
   const apps = [
     {
       name: "Notes",
@@ -233,6 +243,78 @@ export default function Home() {
               <span className="font-medium">Upload Media</span>
             </Link>
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* LOOM Tracker Summary */}
+      <Card className="glass-effect border-gray-200/50 scale-in">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-lg">
+            <Activity className="h-5 w-5 text-orange-600" />
+            LOOM Tracker Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Time Tracking */}
+            <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-4 w-4 text-orange-600" />
+                <span className="font-medium text-orange-900 dark:text-orange-100">Today's Activity</span>
+              </div>
+              <div className="text-2xl font-bold text-orange-600">
+                {timeEntries.length > 0 ? (
+                  `${Math.floor(timeEntries.reduce((total: number, entry: any) => total + entry.duration, 0) / 60)}h ${timeEntries.reduce((total: number, entry: any) => total + entry.duration, 0) % 60}m`
+                ) : (
+                  "0h 0m"
+                )}
+              </div>
+              <div className="text-sm text-orange-700 dark:text-orange-300">
+                {timeEntries.length} activities tracked
+              </div>
+            </div>
+
+            {/* Mood Tracking */}
+            <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Brain className="h-4 w-4 text-pink-600" />
+                <span className="font-medium text-pink-900 dark:text-pink-100">Current Mood</span>
+              </div>
+              <div className="text-2xl font-bold">
+                {moodEntries.length > 0 ? (
+                  <span className="flex items-center gap-2">
+                    <span className="text-3xl">{moodEntries[moodEntries.length - 1]?.emoji}</span>
+                    <span className="text-pink-600">{moodEntries[moodEntries.length - 1]?.mood}</span>
+                  </span>
+                ) : (
+                  <span className="text-gray-500">No mood set</span>
+                )}
+              </div>
+              <div className="text-sm text-pink-700 dark:text-pink-300">
+                {moodEntries.length} mood entries
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activities */}
+          {timeEntries.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium text-gray-700 dark:text-gray-300">Recent Activities</h4>
+              <div className="space-y-2">
+                {timeEntries.slice(-3).map((entry: any) => (
+                  <div key={entry.id} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                    <span className="text-lg">{entry.icon}</span>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">{entry.activity}</span>
+                      <span className="text-xs text-gray-500 ml-2">
+                        {entry.duration}m
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

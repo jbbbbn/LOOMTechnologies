@@ -83,6 +83,9 @@ export function Navigation() {
           </div>
           
           <div className="flex items-center space-x-2">
+            {/* LOOM Tracker - icon only */}
+            <LoomTracker isNavBar={true} />
+            
             {/* Mobile Menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -119,19 +122,11 @@ export function Navigation() {
                     );
                   })}
                   
-                  {/* LOOM Tracker in Mobile Menu */}
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      <Activity className="w-4 h-4 inline mr-2" />
-                      LOOM Tracker
-                    </div>
-                    <LoomTracker isNavBar={false} />
-                  </div>
+
                 </div>
               </SheetContent>
             </Sheet>
             
-            <LoomTracker isNavBar={true} />
             <Button variant="ghost" size="sm" className="hidden sm:flex rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50">
               <Bell className="w-4 h-4" />
             </Button>

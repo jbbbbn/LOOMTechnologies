@@ -92,10 +92,8 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
       icon: string;
       notes?: string;
     }) => {
-      return await apiRequest("/api/time-tracking", {
-        method: "POST",
-        body: JSON.stringify(entry),
-      });
+      const response = await apiRequest("POST", "/api/time-tracking", entry);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/time-tracking"] });
@@ -116,10 +114,8 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
 
   const moodMutation = useMutation({
     mutationFn: async ({ mood, emoji, note }: { mood: string; emoji: string; note?: string }) => {
-      return await apiRequest("/api/mood", {
-        method: "POST",
-        body: JSON.stringify({ mood, emoji, note }),
-      });
+      const response = await apiRequest("POST", "/api/mood", { mood, emoji, note });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mood"] });
@@ -205,13 +201,13 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
     return (
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="flex items-center gap-2 rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50">
+          <Button variant="ghost" size="sm" className="relative rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50">
             <Activity className="w-4 h-4" />
-            <span>Tracker</span>
             {currentActivity && (
-              <Badge variant="secondary" className="ml-2 text-xs">
-                {formatTime(elapsedTime)}
-              </Badge>
+              <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+            )}
+            {currentMood && (
+              <div className="absolute -bottom-1 -right-1 text-xs">{currentMood.emoji}</div>
             )}
           </Button>
         </DialogTrigger>
