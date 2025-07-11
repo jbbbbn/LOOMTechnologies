@@ -738,8 +738,9 @@ Focus on providing detailed, personalized responses using the user's actual data
         console.log('User preferences for entertainment question:', JSON.stringify(userContext.preferences, null, 2));
       }
 
-      // Use enhanced Ollama LangChain orchestrator for intelligent task routing
-      const aiResponse = await ollamaLangChainService.orchestrateTask(
+      // Use proper LangChain + Ollama + ChromaDB vector orchestrator
+      const { vectorOrchestrator } = await import('./vectorService');
+      const aiResponse = await vectorOrchestrator.orchestrateTask(
         message,
         userId,
         userContext
