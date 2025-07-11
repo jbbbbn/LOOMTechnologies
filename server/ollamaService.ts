@@ -165,9 +165,7 @@ export class OllamaLangChainService {
     const { message, user_context, task_type } = context;
     const messageLower = message.toLowerCase();
     
-    // Debug logging
-    console.log(`AI processing message: "${message}"`);
-    console.log(`Checking patterns for: "${messageLower}"`);
+    // REMOVED DEBUG LOGGING - VECTOR ORCHESTRATOR SHOULD BE USED
 
     // Handle specific questions about favorite singers (plural)
     if (messageLower.includes("singers") && !messageLower.includes("singer?") && !messageLower.includes("who is")) {
