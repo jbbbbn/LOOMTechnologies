@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { aiService } from "./aiService";
 import { gpt4allService } from "./gpt4allService";
+import { mistralService } from "./mistralService";
 import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema } from "@shared/schema";
@@ -115,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to generate AI insights
   async function generateAIInsights(data: any, appType: string): Promise<string> {
     try {
-      return await gpt4allService.generateInsights(data, appType);
+      return await mistralService.generateInsights(data, appType);
     } catch (error) {
       console.error("AI insights error:", error);
       return "AI insights temporarily unavailable";
@@ -607,7 +608,7 @@ If the user asks about topics that might benefit from current information or wan
                            message.toLowerCase().includes('what happened') ||
                            message.toLowerCase().includes('tell me more');
       
-      let response = await gpt4allService.generateResponse(message, systemPrompt);
+      let response = await mistralService.generateResponse(message, systemPrompt);
       
       // If it's a question that could benefit from web search, add web results
       if (needsWebSearch || message.includes('?')) {
@@ -633,8 +634,8 @@ If the user asks about topics that might benefit from current information or wan
 
   app.post("/api/ai/interrupt", authenticateToken, async (req, res) => {
     try {
-      gpt4allService.interrupt();
-      res.json({ success: true, message: "GPT4All processing interrupted" });
+      mistralService.interrupt();
+      res.json({ success: true, message: "Mistral AI processing interrupted" });
     } catch (error) {
       console.error("AI interrupt error:", error);
       res.status(500).json({ error: "Failed to interrupt AI" });
