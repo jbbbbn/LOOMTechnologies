@@ -74,37 +74,29 @@ export default function Search() {
         </div>
       </div>
 
-      {/* Search Form */}
+      {/* Search powered by Google Custom Search Engine */}
       <Card className="mb-8">
         <CardContent className="pt-6">
-          <form onSubmit={handleSearch} className="flex space-x-4">
-            <div className="flex-1 relative">
-              <SearchIcon className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <Input
-                placeholder="Search for anything..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="pl-10 text-lg h-12"
-              />
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">
+              Search powered by your Google Custom Search Engine below
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <SearchIcon className="w-4 h-4" />
+              <span>Engine ID: 500a10ce1ddf24ab2</span>
             </div>
-            <Button 
-              type="submit" 
-              size="lg"
-              className="bg-[var(--loom-orange)] hover:bg-[var(--loom-light)]"
-              disabled={searchMutation.isPending}
-            >
-              Search
-            </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Search Results */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Google Custom Search */}
+          {/* Google Custom Search - Main Search */}
           <GoogleCustomSearch />
-          {searchMutation.isPending ? (
+          
+          {/* Hide LOOM internal search since we're using Google Custom Search exclusively */}
+          {false && searchMutation.isPending ? (
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center py-8">
@@ -113,7 +105,7 @@ export default function Search() {
                 </div>
               </CardContent>
             </Card>
-          ) : currentSearch ? (
+          ) : false && currentSearch ? (
             <Card>
               <CardHeader>
                 <CardTitle>Search Results for "{currentSearch.query}"</CardTitle>
@@ -237,15 +229,27 @@ export default function Search() {
               <div className="space-y-3">
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <div className="text-sm font-medium text-blue-900">Top Interest</div>
-                  <div className="text-xs text-blue-700">Technology & AI</div>
+                  <div className="text-xs text-blue-700">
+                    {getPopularSearches()[0]?.query || "No searches yet"}
+                  </div>
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg">
                   <div className="text-sm font-medium text-green-900">Search Pattern</div>
-                  <div className="text-xs text-green-700">Most active: 2-4 PM</div>
+                  <div className="text-xs text-green-700">
+                    {searches.length > 0 ? 
+                      `${searches.length} searches performed` : 
+                      "No pattern data yet"
+                    }
+                  </div>
                 </div>
                 <div className="bg-orange-50 p-3 rounded-lg">
                   <div className="text-sm font-medium text-orange-900">Suggestion</div>
-                  <div className="text-xs text-orange-700">Try more specific queries</div>
+                  <div className="text-xs text-orange-700">
+                    {searches.length < 5 ? 
+                      "Try searching more to get insights" : 
+                      "Use Google Custom Search above"
+                    }
+                  </div>
                 </div>
               </div>
             </CardContent>

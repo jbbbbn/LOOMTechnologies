@@ -15,10 +15,12 @@ import {
   LogOut,
   Bot,
   Menu,
-  Settings
+  Settings,
+  Activity
 } from "lucide-react";
 import loomLogo from "@assets/LOOM_logo_2_1752244843559.jpg";
 import { useAuth } from "@/hooks/useAuth";
+import LoomTracker from "@/components/LoomTracker";
 
 export function Navigation() {
   const [location] = useLocation();
@@ -120,6 +122,7 @@ export function Navigation() {
               </SheetContent>
             </Sheet>
             
+            <LoomTracker isNavBar={true} />
             <Button variant="ghost" size="sm" className="hidden sm:flex rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50">
               <Bell className="w-4 h-4" />
             </Button>

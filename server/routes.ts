@@ -6,6 +6,7 @@ import { gpt4allService } from "./gpt4allService";
 import { mistralService } from "./mistralService";
 import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
+import { aiSquad, AIServiceType } from "./aiSquad";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema, insertUserPreferencesSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -730,7 +731,9 @@ Based on this real data, answer questions about the user's interests, habits, an
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
       
-      let response = await mistralService.generateResponse(message, systemPrompt);
+      // Use AI Squad for intelligent routing
+      const aiResponse = await aiSquad.routeRequest(message, userContext);
+      let response = aiResponse.response;
       
       // Only add web search for specific requests that need current information
       if (needsWebSearch) {
@@ -837,6 +840,40 @@ Focus on providing detailed, personalized responses using the user's actual data
     } catch (error) {
       console.error("Stats error:", error);
       res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
+  // Time tracking endpoints
+  app.get("/api/time-tracking", authenticateToken, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      // For now, return mock data - will implement proper storage later
+      res.json([]);
+    } catch (error) {
+      console.error("Time tracking fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch time tracking data" });
+    }
+  });
+
+  app.post("/api/time-tracking", authenticateToken, async (req: any, res) => {
+    try {
+      const { activity, duration, startTime, endTime, date, icon } = req.body;
+      const userId = req.user.userId;
+      
+      // For now, return mock data - will implement proper storage later
+      res.json({ 
+        id: Date.now(), 
+        userId, 
+        activity, 
+        duration, 
+        startTime, 
+        endTime, 
+        date, 
+        icon 
+      });
+    } catch (error) {
+      console.error("Time tracking save error:", error);
+      res.status(500).json({ error: "Failed to save time tracking data" });
     }
   });
 

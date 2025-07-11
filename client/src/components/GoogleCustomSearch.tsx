@@ -18,6 +18,27 @@ export default function GoogleCustomSearch({ className }: GoogleCustomSearchProp
     script.onload = () => {
       // Script loaded, the search box should now be functional
       console.log('Google Custom Search loaded');
+      
+      // Track search usage in LOOM
+      setTimeout(() => {
+        const searchBox = document.querySelector('.gsc-search-box input');
+        if (searchBox) {
+          searchBox.addEventListener('change', (e) => {
+            // Save search to LOOM recent searches
+            const query = (e.target as HTMLInputElement).value;
+            if (query.trim()) {
+              fetch('/api/search', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ query })
+              }).catch(err => console.log('Search tracking failed:', err));
+            }
+          });
+        }
+      }, 1000);
     };
     
     document.head.appendChild(script);
