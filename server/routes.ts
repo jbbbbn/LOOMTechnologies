@@ -7,6 +7,7 @@ import { mistralService } from "./mistralService";
 import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
 import { aiSquad, AIServiceType } from "./aiSquad";
+import { langchainOrchestrator } from "./langchainService";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema, insertUserPreferencesSchema, insertMoodSchema, insertTimeTrackingSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -731,12 +732,22 @@ Based on this real data, answer questions about the user's interests, habits, an
 
 Focus on providing detailed, personalized responses using the user's actual data. Don't mention web search unless specifically requested. Use the user's real information to give helpful, accurate answers.`;
       
-      // Use AI Squad for intelligent routing
-      const aiResponse = await aiSquad.routeRequest(message, userContext);
+      // Use LangChain orchestrator for intelligent task routing
+      const aiResponse = await langchainOrchestrator.orchestrateTask(
+        message,
+        userId,
+        userContext
+      );
+      
       let response = aiResponse.response;
       
+      // Add information about tools used
+      if (aiResponse.tools_used.length > 0) {
+        console.log(`AI tools used: ${aiResponse.tools_used.join(', ')}`);
+      }
+      
       // Only add web search for specific requests that need current information
-      if (needsWebSearch) {
+      if (needsWebSearch && aiResponse.task_type === 'web_search') {
         try {
           const searchResults = await performWebSearch(message);
           if (searchResults.results.length > 0) {
