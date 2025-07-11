@@ -11,7 +11,7 @@ import {
   Bell,
   User
 } from "lucide-react";
-import loomLogo from "@assets/LOOM_logo_1_1752242667503.jpg";
+import loomLogo from "@assets/LOOM_logo_2_1752244843559.jpg";
 
 export function Navigation() {
   const [location] = useLocation();
