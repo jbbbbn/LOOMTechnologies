@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronUp, ChevronDown, Bot, Send, Sparkles, MessageCircle, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -21,6 +22,7 @@ export function AIAssistant() {
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const queryClient = useQueryClient();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   // Load chat history from localStorage on component mount
   useEffect(() => {
@@ -113,20 +115,16 @@ export function AIAssistant() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <Sparkles className="w-4 h-4 text-[var(--loom-orange)]" />
-                  <span className="text-sm font-medium">AI Insights</span>
+                  <span className="text-sm font-medium">{t('aiInsights')}</span>
                 </div>
                 {insightsLoading ? (
                   <div className="animate-pulse bg-gray-200 h-16 rounded"></div>
                 ) : (
-                  <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm">
                     <div 
-                      className="prose prose-sm max-w-none"
+                      className="prose prose-sm max-w-none dark:prose-invert"
                       dangerouslySetInnerHTML={{
-                        __html: (insights?.insights || "Start using LOOM apps to get personalized insights!")
-                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/##\s*(.*?)$/gm, '<h3 class="text-base font-semibold mb-2 text-gray-800">$1</h3>')
-                          .replace(/\n\n/g, '<br><br>')
-                          .replace(/\n/g, '<br>')
+                        __html: insights?.insights || "Start using LOOM apps to get personalized insights!"
                       }}
                     />
                   </div>
@@ -138,7 +136,7 @@ export function AIAssistant() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <MessageCircle className="w-4 h-4 text-[var(--loom-orange)]" />
-                    <span className="text-sm font-medium">Chat with AI</span>
+                    <span className="text-sm font-medium">{t('aiAssistant')}</span>
                   </div>
                   {chatHistory.length > 0 && (
                     <Button
@@ -155,7 +153,7 @@ export function AIAssistant() {
                 <ScrollArea className="h-40 w-full border rounded-lg p-3" ref={scrollAreaRef}>
                   {chatHistory.length === 0 ? (
                     <div className="text-sm text-gray-500 text-center py-8">
-                      Ask me anything about your LOOM data!
+                      {t('askAnything')}
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -164,15 +162,12 @@ export function AIAssistant() {
                           <div className={`max-w-[80%] p-2 rounded-lg text-sm ${
                             msg.role === 'user' 
                               ? 'bg-[var(--loom-orange)] text-white' 
-                              : 'bg-gray-100 text-gray-900'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
                           }`}>
                             <div 
-                              className="prose prose-sm max-w-none"
+                              className="prose prose-sm max-w-none dark:prose-invert"
                               dangerouslySetInnerHTML={{
                                 __html: msg.content
-                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                  .replace(/\n\n/g, '<br><br>')
-                                  .replace(/\n/g, '<br>')
                               }}
                             />
                           </div>
@@ -180,8 +175,8 @@ export function AIAssistant() {
                       ))}
                       {chatMutation.isPending && (
                         <div className="flex justify-start">
-                          <div className="bg-gray-100 text-gray-900 p-2 rounded-lg text-sm">
-                            <div className="animate-pulse">Thinking...</div>
+                          <div className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2 rounded-lg text-sm">
+                            <div className="animate-pulse">{t('loading')}</div>
                           </div>
                         </div>
                       )}
@@ -191,7 +186,7 @@ export function AIAssistant() {
 
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="Ask your AI assistant..."
+                    placeholder={t('askAnything')}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}

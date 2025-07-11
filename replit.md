@@ -73,6 +73,15 @@ Preferred communication style: Simple, everyday language.
   - Consciousness toggle to enable/disable AI learning and insights
   - Language selection with 10 supported languages
   - System information display showing platform version and connected apps
+  - **AI Preference Learning**: Automatic extraction of user preferences from chat messages
+  - AI now detects statements like "I like comics" or "I want to exercise more" and stores them
+  - User preferences are categorized (interests, goals, dislikes, preferences) for personalized responses
+  - Privacy-focused learning system with user-specific data storage
+  - Enhanced AI context awareness using actual user data and stored preferences
+  - **Multi-Language Support**: Comprehensive internationalization system for the entire platform
+  - English, Spanish, and French translations implemented across all components
+  - Dynamic language switching with localStorage persistence
+  - Improved AI Assistant interface with proper HTML formatting and dark theme support
 
 ## System Architecture
 

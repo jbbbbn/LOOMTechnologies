@@ -94,6 +94,18 @@ export const aiLearning = pgTable("ai_learning", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  category: text("category").notNull(), // 'interests', 'goals', 'personality', 'habits'
+  key: text("key").notNull(), // 'likes_comics', 'wants_exercise', 'morning_person'
+  value: text("value").notNull(),
+  confidence: integer("confidence").default(1), // 1-10 confidence level
+  source: text("source").notNull(), // 'chat', 'notes', 'behavior'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, updatedAt: true });
@@ -103,6 +115,7 @@ export const insertEmailSchema = createInsertSchema(emails).omit({ id: true, cre
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, timestamp: true });
 export const insertMediaSchema = createInsertSchema(media).omit({ id: true, createdAt: true });
 export const insertAILearningSchema = createInsertSchema(aiLearning).omit({ id: true, timestamp: true });
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 // Relations
@@ -113,6 +126,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   emails: many(emails),
   media: many(media),
   aiLearning: many(aiLearning),
+  userPreferences: many(userPreferences),
 }));
 
 export const notesRelations = relations(notes, ({ one }) => ({
@@ -157,6 +171,13 @@ export const aiLearningRelations = relations(aiLearning, ({ one }) => ({
   }),
 }));
 
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Note = typeof notes.$inferSelect;
@@ -173,3 +194,5 @@ export type Media = typeof media.$inferSelect;
 export type InsertMedia = z.infer<typeof insertMediaSchema>;
 export type AILearning = typeof aiLearning.$inferSelect;
 export type InsertAILearning = z.infer<typeof insertAILearningSchema>;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;

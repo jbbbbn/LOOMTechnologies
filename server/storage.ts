@@ -1,8 +1,8 @@
 import { 
-  users, notes, events, searches, emails, messages, media, aiLearning,
+  users, notes, events, searches, emails, messages, media, aiLearning, userPreferences,
   type User, type InsertUser, type Note, type InsertNote, type Event, type InsertEvent,
   type Search, type InsertSearch, type Email, type InsertEmail, type Message, type InsertMessage,
-  type Media, type InsertMedia, type AILearning, type InsertAILearning
+  type Media, type InsertMedia, type AILearning, type InsertAILearning, type UserPreferences, type InsertUserPreferences
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -53,6 +53,12 @@ export interface IStorage {
   // AI Learning
   getAILearningByUserId(userId: number): Promise<AILearning[]>;
   createAILearning(learning: InsertAILearning): Promise<AILearning>;
+  
+  // User Preferences
+  getUserPreferencesByUserId(userId: number): Promise<UserPreferences[]>;
+  createUserPreference(preference: InsertUserPreferences): Promise<UserPreferences>;
+  updateUserPreference(id: number, preference: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined>;
+  deleteUserPreference(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -64,6 +70,7 @@ export class MemStorage implements IStorage {
   private messages: Map<number, Message> = new Map();
   private media: Map<number, Media> = new Map();
   private aiLearning: Map<number, AILearning> = new Map();
+  private userPreferences: Map<number, UserPreferences> = new Map();
   
   private currentUserId = 1;
   private currentNoteId = 1;
@@ -73,6 +80,7 @@ export class MemStorage implements IStorage {
   private currentMessageId = 1;
   private currentMediaId = 1;
   private currentAILearningId = 1;
+  private currentUserPreferencesId = 1;
 
   constructor() {
     // Create a default user
@@ -97,7 +105,9 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser, 
       id, 
-      createdAt: new Date()
+      createdAt: new Date(),
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null
     };
     this.users.set(id, user);
     return user;
@@ -167,7 +177,14 @@ export class MemStorage implements IStorage {
       id, 
       createdAt: new Date(),
       description: insertEvent.description || null,
-      location: insertEvent.location || null
+      location: insertEvent.location || null,
+      isRecurring: insertEvent.isRecurring || null,
+      recurringType: insertEvent.recurringType || null,
+      recurringEndDate: insertEvent.recurringEndDate || null,
+      recurringDays: insertEvent.recurringDays || null,
+      status: insertEvent.status || null,
+      reminder: insertEvent.reminder || null,
+      category: insertEvent.category || null
     };
     this.events.set(id, event);
     return event;
@@ -220,7 +237,11 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       sender: insertEmail.sender || null,
       recipient: insertEmail.recipient || null,
-      isRead: insertEmail.isRead || null
+      isRead: insertEmail.isRead || null,
+      isDraft: insertEmail.isDraft || null,
+      isStarred: insertEmail.isStarred || null,
+      folder: insertEmail.folder || null,
+      attachments: insertEmail.attachments || null
     };
     this.emails.set(id, email);
     return email;
@@ -304,6 +325,41 @@ export class MemStorage implements IStorage {
     };
     this.aiLearning.set(id, learning);
     return learning;
+  }
+
+  // User Preferences
+  async getUserPreferencesByUserId(userId: number): Promise<UserPreferences[]> {
+    return Array.from(this.userPreferences.values()).filter(pref => pref.userId === userId);
+  }
+
+  async createUserPreference(insertPreference: InsertUserPreferences): Promise<UserPreferences> {
+    const id = this.currentUserPreferencesId++;
+    const preference: UserPreferences = { 
+      ...insertPreference, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      confidence: insertPreference.confidence || null
+    };
+    this.userPreferences.set(id, preference);
+    return preference;
+  }
+
+  async updateUserPreference(id: number, updates: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined> {
+    const preference = this.userPreferences.get(id);
+    if (!preference) return undefined;
+    
+    const updatedPreference: UserPreferences = { 
+      ...preference, 
+      ...updates, 
+      updatedAt: new Date()
+    };
+    this.userPreferences.set(id, updatedPreference);
+    return updatedPreference;
+  }
+
+  async deleteUserPreference(id: number): Promise<boolean> {
+    return this.userPreferences.delete(id);
   }
 }
 
@@ -493,6 +549,33 @@ export class DatabaseStorage implements IStorage {
       .values(insertAILearning)
       .returning();
     return learning;
+  }
+
+  // User Preferences
+  async getUserPreferencesByUserId(userId: number): Promise<UserPreferences[]> {
+    return await db.select().from(userPreferences).where(eq(userPreferences.userId, userId));
+  }
+
+  async createUserPreference(insertPreference: InsertUserPreferences): Promise<UserPreferences> {
+    const [preference] = await db
+      .insert(userPreferences)
+      .values(insertPreference)
+      .returning();
+    return preference;
+  }
+
+  async updateUserPreference(id: number, updates: Partial<InsertUserPreferences>): Promise<UserPreferences | undefined> {
+    const [preference] = await db
+      .update(userPreferences)
+      .set(updates)
+      .where(eq(userPreferences.id, id))
+      .returning();
+    return preference || undefined;
+  }
+
+  async deleteUserPreference(id: number): Promise<boolean> {
+    const result = await db.delete(userPreferences).where(eq(userPreferences.id, id));
+    return (result.rowCount || 0) > 0;
   }
 }
 

@@ -6,7 +6,7 @@ import { gpt4allService } from "./gpt4allService";
 import { mistralService } from "./mistralService";
 import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
-import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema } from "@shared/schema";
+import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema, insertUserPreferencesSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -601,13 +601,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).user.userId;
       
       // Get user's actual data for context
-      const [notes, events, searches, emails, media, learningData] = await Promise.all([
+      const [notes, events, searches, emails, media, learningData, userPreferences] = await Promise.all([
         storage.getNotesByUserId(userId),
         storage.getEventsByUserId(userId),
         storage.getSearchesByUserId(userId),
         storage.getEmailsByUserId(userId),
         storage.getMediaByUserId(userId),
-        storage.getAILearningByUserId(userId)
+        storage.getAILearningByUserId(userId),
+        storage.getUserPreferencesByUserId(userId)
       ]);
 
       // Create rich context about user
@@ -617,8 +618,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         searches: searches.slice(-5).map(s => ({ query: s.query })),
         emails: emails.slice(-5).map(e => ({ subject: e.subject })),
         media: media.slice(-5).map(m => ({ filename: m.originalName, description: m.description })),
-        activities: learningData.slice(-10).map(l => ({ type: l.dataType, app: l.appType }))
+        activities: learningData.slice(-10).map(l => ({ type: l.dataType, app: l.appType })),
+        preferences: userPreferences.map(p => ({ category: p.category, key: p.key, value: p.value }))
       };
+
+      // Extract user preferences from the message
+      await extractUserPreferences(message, userId);
       
       const systemPrompt = `You are a personal AI assistant for the LOOM platform. You analyze the user's actual data to provide personalized responses. 
 
@@ -629,6 +634,7 @@ User's Data Context:
 - Recent Emails: ${JSON.stringify(userContext.emails)}
 - Media: ${JSON.stringify(userContext.media)}
 - Activities: ${JSON.stringify(userContext.activities)}
+- Preferences: ${JSON.stringify(userContext.preferences)}
 
 Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
 
@@ -673,6 +679,56 @@ Focus on providing detailed, personalized responses using the user's actual data
     } catch (error) {
       console.error("AI interrupt error:", error);
       res.status(500).json({ error: "Failed to interrupt AI" });
+    }
+  });
+
+  // User Preferences routes
+  app.get("/api/user-preferences", authenticateToken, async (req: any, res) => {
+    try {
+      const preferences = await storage.getUserPreferencesByUserId(req.user.userId);
+      res.json(preferences);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user preferences" });
+    }
+  });
+
+  app.post("/api/user-preferences", authenticateToken, async (req: any, res) => {
+    try {
+      const validatedData = insertUserPreferencesSchema.parse(req.body);
+      const preference = await storage.createUserPreference({
+        ...validatedData,
+        userId: req.user.userId
+      });
+      res.json(preference);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid preference data" });
+    }
+  });
+
+  app.put("/api/user-preferences/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertUserPreferencesSchema.partial().parse(req.body);
+      const preference = await storage.updateUserPreference(id, validatedData);
+      if (!preference) {
+        return res.status(404).json({ error: "Preference not found" });
+      }
+      res.json(preference);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid preference data" });
+    }
+  });
+
+  app.delete("/api/user-preferences/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteUserPreference(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Preference not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete preference" });
     }
   });
 
@@ -724,6 +780,50 @@ Focus on providing detailed, personalized responses using the user's actual data
       console.log('Client disconnected from WebSocket');
     });
   });
+
+  // Helper function to extract user preferences from chat messages
+  async function extractUserPreferences(message: string, userId: number): Promise<void> {
+    const lowerMessage = message.toLowerCase();
+    
+    // Define preference patterns
+    const patterns = [
+      { pattern: /i like (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => match.replace(/i like /, '') },
+      { pattern: /i love (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => match.replace(/i love /, '') },
+      { pattern: /i want to (.*?)(?:\.|$|,)/, category: "goals", extract: (match: string) => match.replace(/i want to /, '') },
+      { pattern: /i need to (.*?)(?:\.|$|,)/, category: "goals", extract: (match: string) => match.replace(/i need to /, '') },
+      { pattern: /i enjoy (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => match.replace(/i enjoy /, '') },
+      { pattern: /i prefer (.*?)(?:\.|$|,)/, category: "preferences", extract: (match: string) => match.replace(/i prefer /, '') },
+      { pattern: /i hate (.*?)(?:\.|$|,)/, category: "dislikes", extract: (match: string) => match.replace(/i hate /, '') },
+      { pattern: /i don't like (.*?)(?:\.|$|,)/, category: "dislikes", extract: (match: string) => match.replace(/i don't like /, '') }
+    ];
+
+    for (const { pattern, category, extract } of patterns) {
+      const matches = lowerMessage.match(pattern);
+      if (matches) {
+        const value = extract(matches[0]).trim();
+        if (value && value.length > 2) {
+          try {
+            // Check if preference already exists
+            const existingPrefs = await storage.getUserPreferencesByUserId(userId);
+            const exists = existingPrefs.some(p => p.category === category && p.value.toLowerCase() === value.toLowerCase());
+            
+            if (!exists) {
+              await storage.createUserPreference({
+                userId,
+                category,
+                key: value.replace(/\s+/g, '_').toLowerCase(),
+                value,
+                source: "chat",
+                confidence: 8
+              });
+            }
+          } catch (error) {
+            console.error("Error saving user preference:", error);
+          }
+        }
+      }
+    }
+  }
 
   return httpServer;
 }
