@@ -7,7 +7,7 @@ import { mistralService } from "./mistralService";
 import { storage } from "./storage";
 import { performWebSearch } from "./searchService";
 import { aiSquad, AIServiceType } from "./aiSquad";
-import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema, insertUserPreferencesSchema } from "@shared/schema";
+import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema, insertUserPreferencesSchema, insertMoodSchema, insertTimeTrackingSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -858,8 +858,8 @@ Focus on providing detailed, personalized responses using the user's actual data
   app.get("/api/time-tracking", authenticateToken, async (req: any, res) => {
     try {
       const userId = req.user.userId;
-      // For now, return mock data - will implement proper storage later
-      res.json([]);
+      const timeTracking = await storage.getTimeTrackingByUserId(userId);
+      res.json(timeTracking);
     } catch (error) {
       console.error("Time tracking fetch error:", error);
       res.status(500).json({ error: "Failed to fetch time tracking data" });
@@ -868,23 +868,52 @@ Focus on providing detailed, personalized responses using the user's actual data
 
   app.post("/api/time-tracking", authenticateToken, async (req: any, res) => {
     try {
-      const { activity, duration, startTime, endTime, date, icon } = req.body;
+      const validatedData = insertTimeTrackingSchema.parse(req.body);
       const userId = req.user.userId;
       
-      // For now, return mock data - will implement proper storage later
-      res.json({ 
-        id: Date.now(), 
-        userId, 
-        activity, 
-        duration, 
-        startTime, 
-        endTime, 
-        date, 
-        icon 
+      const newTimeTracking = await storage.createTimeTracking({
+        ...validatedData,
+        userId,
       });
+      
+      res.json(newTimeTracking);
     } catch (error) {
       console.error("Time tracking save error:", error);
       res.status(500).json({ error: "Failed to save time tracking data" });
+    }
+  });
+
+  app.patch("/api/time-tracking/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertTimeTrackingSchema.partial().parse(req.body);
+      
+      const updatedTimeTracking = await storage.updateTimeTracking(id, validatedData);
+      
+      if (!updatedTimeTracking) {
+        return res.status(404).json({ error: "Time tracking entry not found" });
+      }
+      
+      res.json(updatedTimeTracking);
+    } catch (error) {
+      console.error("Time tracking update error:", error);
+      res.status(500).json({ error: "Failed to update time tracking data" });
+    }
+  });
+
+  app.delete("/api/time-tracking/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteTimeTracking(id);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Time tracking entry not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Time tracking delete error:", error);
+      res.status(500).json({ error: "Failed to delete time tracking data" });
     }
   });
 

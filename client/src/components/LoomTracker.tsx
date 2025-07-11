@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { toast } from "@/hooks/use-toast";
 import { 
   Activity, 
   Clock, 
@@ -26,11 +27,12 @@ interface TimeEntry {
   id: number;
   userId: number;
   activity: string;
-  duration: number; // in minutes
-  startTime: string;
+  duration: number;
+  startTime?: string;
   endTime?: string;
   date: string;
-  icon: string;
+  icon?: string;
+  notes?: string;
 }
 
 interface MoodEntry {
@@ -38,6 +40,7 @@ interface MoodEntry {
   userId: number;
   mood: string;
   emoji: string;
+  note?: string;
   createdAt: string;
 }
 
@@ -74,26 +77,64 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
     refetchInterval: 30000,
   });
 
-  const { data: todaysMood } = useQuery({
+  const { data: moodEntries = [] } = useQuery({
     queryKey: ["/api/mood"],
     refetchInterval: 30000,
   });
 
   const timeMutation = useMutation({
-    mutationFn: async (entry: any) => {
-      return await apiRequest("/api/time-tracking", "POST", entry);
+    mutationFn: async (entry: {
+      activity: string;
+      duration: number;
+      startTime: string;
+      endTime: string;
+      date: string;
+      icon: string;
+      notes?: string;
+    }) => {
+      return await apiRequest("/api/time-tracking", {
+        method: "POST",
+        body: JSON.stringify(entry),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/time-tracking"] });
+      toast({
+        title: "Success",
+        description: "Time entry saved successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error("Time tracking error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save time entry. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
   const moodMutation = useMutation({
-    mutationFn: async ({ mood, emoji }: { mood: string; emoji: string }) => {
-      return await apiRequest("/api/mood", "POST", { mood, emoji });
+    mutationFn: async ({ mood, emoji, note }: { mood: string; emoji: string; note?: string }) => {
+      return await apiRequest("/api/mood", {
+        method: "POST",
+        body: JSON.stringify({ mood, emoji, note }),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/mood"] });
+      toast({
+        title: "Success",
+        description: "Mood saved successfully!",
+      });
+    },
+    onError: (error) => {
+      console.error("Mood tracking error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save mood. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -116,16 +157,19 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
 
   const stopActivity = () => {
     if (currentActivity && startTime) {
-      const duration = Math.floor((Date.now() - startTime.getTime()) / 60000); // in minutes
+      const endTime = new Date();
+      const duration = Math.floor((endTime.getTime() - startTime.getTime()) / 60000); // in minutes
       
-      timeMutation.mutate({
-        activity: currentActivity,
-        duration,
-        startTime: startTime.toISOString(),
-        endTime: new Date().toISOString(),
-        date: new Date().toISOString().split('T')[0],
-        icon: activityPresets.find(a => a.name === currentActivity)?.icon || "⏰"
-      });
+      if (duration > 0) {
+        timeMutation.mutate({
+          activity: currentActivity,
+          duration,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          date: new Date().toISOString().split('T')[0],
+          icon: activityPresets.find(a => a.name === currentActivity)?.icon || "⏰"
+        });
+      }
     }
     
     setCurrentActivity(null);
@@ -148,9 +192,9 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
   };
 
   const getCurrentMood = () => {
-    if (!todaysMood || todaysMood.length === 0) return null;
+    if (!moodEntries || moodEntries.length === 0) return null;
     const today = new Date().toDateString();
-    return todaysMood.find((mood: MoodEntry) => 
+    return moodEntries.find((mood: MoodEntry) => 
       new Date(mood.createdAt).toDateString() === today
     );
   };
@@ -161,11 +205,11 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
     return (
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="flex items-center gap-2 rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50">
             <Activity className="w-4 h-4" />
-            <span>LOOM Tracker</span>
+            <span>Tracker</span>
             {currentActivity && (
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-2 text-xs">
                 {formatTime(elapsedTime)}
               </Badge>
             )}
@@ -174,18 +218,21 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>LOOM Tracker</DialogTitle>
+            <DialogDescription>
+              Track your activities and mood throughout the day
+            </DialogDescription>
           </DialogHeader>
-          <LoomTrackerContent
+          <TrackerContent
             currentActivity={currentActivity}
             elapsedTime={elapsedTime}
             startActivity={startActivity}
             stopActivity={stopActivity}
-            customActivity={customActivity}
-            setCustomActivity={setCustomActivity}
+            formatTime={formatTime}
             getTodaysTotal={getTodaysTotal}
             currentMood={currentMood}
             moodMutation={moodMutation}
-            formatTime={formatTime}
+            customActivity={customActivity}
+            setCustomActivity={setCustomActivity}
           />
         </DialogContent>
       </Dialog>
@@ -193,146 +240,178 @@ export default function LoomTracker({ isNavBar = false }: LoomTrackerProps) {
   }
 
   return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="w-5 h-5 text-orange-600" />
-          LOOM Tracker
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <LoomTrackerContent
-          currentActivity={currentActivity}
-          elapsedTime={elapsedTime}
-          startActivity={startActivity}
-          stopActivity={stopActivity}
-          customActivity={customActivity}
-          setCustomActivity={setCustomActivity}
-          getTodaysTotal={getTodaysTotal}
-          currentMood={currentMood}
-          moodMutation={moodMutation}
-          formatTime={formatTime}
-        />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <TrackerContent
+        currentActivity={currentActivity}
+        elapsedTime={elapsedTime}
+        startActivity={startActivity}
+        stopActivity={stopActivity}
+        formatTime={formatTime}
+        getTodaysTotal={getTodaysTotal}
+        currentMood={currentMood}
+        moodMutation={moodMutation}
+        customActivity={customActivity}
+        setCustomActivity={setCustomActivity}
+      />
+    </div>
   );
 }
 
-function LoomTrackerContent({
+interface TrackerContentProps {
+  currentActivity: string | null;
+  elapsedTime: number;
+  startActivity: (activity: string) => void;
+  stopActivity: () => void;
+  formatTime: (seconds: number) => string;
+  getTodaysTotal: () => number;
+  currentMood: MoodEntry | null;
+  moodMutation: any;
+  customActivity: string;
+  setCustomActivity: (activity: string) => void;
+}
+
+function TrackerContent({
   currentActivity,
   elapsedTime,
   startActivity,
   stopActivity,
-  customActivity,
-  setCustomActivity,
+  formatTime,
   getTodaysTotal,
   currentMood,
   moodMutation,
-  formatTime
-}: any) {
+  customActivity,
+  setCustomActivity,
+}: TrackerContentProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Current Activity */}
-      {currentActivity ? (
-        <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border">
-          <div className="text-2xl font-bold text-orange-600 mb-2">
-            {formatTime(elapsedTime)}
-          </div>
-          <p className="text-lg font-medium text-gray-800 mb-3">
-            Currently: {currentActivity}
-          </p>
-          <Button onClick={stopActivity} variant="destructive" size="sm">
-            <Square className="w-4 h-4 mr-2" />
-            Stop Activity
-          </Button>
-        </div>
-      ) : (
-        <div className="text-center p-4 bg-gray-50 rounded-lg">
-          <Timer className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-600">No activity being tracked</p>
-        </div>
+      {currentActivity && (
+        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-900/20">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-orange-600" />
+                <div>
+                  <p className="font-medium text-orange-900 dark:text-orange-100">
+                    {currentActivity}
+                  </p>
+                  <p className="text-sm text-orange-700 dark:text-orange-300">
+                    {formatTime(elapsedTime)}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={stopActivity}
+                variant="outline"
+                size="sm"
+                className="border-orange-300 text-orange-700 hover:bg-orange-100"
+              >
+                <Square className="w-4 h-4 mr-2" />
+                Stop
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Quick Start Activities */}
-      <div className="space-y-3">
-        <h4 className="font-medium text-gray-700">Quick Start</h4>
-        <div className="grid grid-cols-2 gap-2">
-          {activityPresets.map((activity) => (
-            <Button
-              key={activity.name}
-              variant="outline"
-              className={`flex items-center gap-2 h-12 ${activity.color}`}
-              onClick={() => startActivity(activity.name)}
-              disabled={!!currentActivity}
-            >
-              <activity.lucideIcon className="w-4 h-4" />
-              <span className="text-sm">{activity.name}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Custom Activity */}
-      <div className="space-y-2">
-        <h4 className="font-medium text-gray-700">Custom Activity</h4>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Enter custom activity..."
-            value={customActivity}
-            onChange={(e) => setCustomActivity(e.target.value)}
-            className="flex-1"
-          />
-          <Button
-            onClick={() => {
-              if (customActivity.trim()) {
-                startActivity(customActivity.trim());
-                setCustomActivity("");
-              }
-            }}
-            disabled={!customActivity.trim() || !!currentActivity}
-          >
-            <Play className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Today's Summary */}
-      <div className="space-y-2">
-        <h4 className="font-medium text-gray-700">Today's Summary</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 bg-blue-50 rounded-lg">
-            <div className="text-xl font-bold text-blue-600">
-              {Math.floor(getTodaysTotal() / 60)}h {getTodaysTotal() % 60}m
-            </div>
-            <p className="text-sm text-blue-700">Total Time</p>
-          </div>
-          <div className="text-center p-3 bg-green-50 rounded-lg">
-            <div className="text-xl font-bold text-green-600">
-              {currentMood?.emoji || "😐"}
-            </div>
-            <p className="text-sm text-green-700">Current Mood</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Mood Quick Update */}
-      {!currentMood && (
-        <div className="space-y-2">
-          <h4 className="font-medium text-gray-700">Log Your Mood</h4>
-          <div className="flex gap-2">
-            {moods.map((mood) => (
+      {/* Activity Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Timer className="w-5 h-5" />
+            Start Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {activityPresets.map((preset) => (
               <Button
-                key={mood.name}
+                key={preset.name}
                 variant="outline"
-                className={`flex-1 ${mood.color}`}
-                onClick={() => moodMutation.mutate({ mood: mood.name, emoji: mood.emoji })}
+                onClick={() => startActivity(preset.name)}
+                disabled={!!currentActivity}
+                className="flex items-center gap-2 p-3 h-auto"
               >
-                <span className="text-lg">{mood.emoji}</span>
+                <preset.lucideIcon className="w-4 h-4" />
+                <span className="text-sm">{preset.name}</span>
               </Button>
             ))}
           </div>
-        </div>
-      )}
+          
+          <div className="flex gap-2">
+            <Input
+              placeholder="Custom activity..."
+              value={customActivity}
+              onChange={(e) => setCustomActivity(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && customActivity.trim()) {
+                  startActivity(customActivity.trim());
+                  setCustomActivity("");
+                }
+              }}
+            />
+            <Button
+              onClick={() => {
+                if (customActivity.trim()) {
+                  startActivity(customActivity.trim());
+                  setCustomActivity("");
+                }
+              }}
+              disabled={!customActivity.trim() || !!currentActivity}
+            >
+              <Play className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Mood Tracking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="w-5 h-5" />
+            Today's Mood
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {currentMood ? (
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{currentMood.emoji}</span>
+              <span className="font-medium">{currentMood.mood}</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-5 gap-2">
+              {moods.map((mood) => (
+                <Button
+                  key={mood.name}
+                  variant="outline"
+                  onClick={() => moodMutation.mutate({ mood: mood.name, emoji: mood.emoji })}
+                  className={`${mood.color} flex flex-col items-center gap-1 p-3 h-auto`}
+                >
+                  <span className="text-2xl">{mood.emoji}</span>
+                  <span className="text-xs">{mood.name}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Today's Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Today's Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Activity className="w-5 h-5 text-blue-600" />
+            <span className="font-medium">Total Active Time:</span>
+            <Badge variant="secondary">
+              {Math.floor(getTodaysTotal() / 60)}h {getTodaysTotal() % 60}m
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

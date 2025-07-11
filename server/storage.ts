@@ -1,9 +1,9 @@
 import { 
-  users, notes, events, searches, emails, messages, media, aiLearning, userPreferences, moods,
+  users, notes, events, searches, emails, messages, media, aiLearning, userPreferences, moods, timeTracking,
   type User, type InsertUser, type Note, type InsertNote, type Event, type InsertEvent,
   type Search, type InsertSearch, type Email, type InsertEmail, type Message, type InsertMessage,
   type Media, type InsertMedia, type AILearning, type InsertAILearning, type UserPreferences, type InsertUserPreferences,
-  type Mood, type InsertMood
+  type Mood, type InsertMood, type TimeTracking, type InsertTimeTracking
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -64,6 +64,12 @@ export interface IStorage {
   // Moods
   getMoodsByUserId(userId: number): Promise<Mood[]>;
   createMood(mood: InsertMood): Promise<Mood>;
+  
+  // Time Tracking
+  getTimeTrackingByUserId(userId: number): Promise<TimeTracking[]>;
+  createTimeTracking(timeTracking: InsertTimeTracking): Promise<TimeTracking>;
+  updateTimeTracking(id: number, timeTracking: Partial<InsertTimeTracking>): Promise<TimeTracking | undefined>;
+  deleteTimeTracking(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -77,6 +83,7 @@ export class MemStorage implements IStorage {
   private aiLearning: Map<number, AILearning> = new Map();
   private userPreferences: Map<number, UserPreferences> = new Map();
   private moods: Map<number, Mood> = new Map();
+  private timeTracking: Map<number, TimeTracking> = new Map();
   
   private currentUserId = 1;
   private currentNoteId = 1;
@@ -88,6 +95,7 @@ export class MemStorage implements IStorage {
   private currentAILearningId = 1;
   private currentUserPreferencesId = 1;
   private currentMoodId = 1;
+  private currentTimeTrackingId = 1;
 
   constructor() {
     // Create a default user
@@ -384,6 +392,38 @@ export class MemStorage implements IStorage {
     this.moods.set(id, mood);
     return mood;
   }
+
+  async getTimeTrackingByUserId(userId: number): Promise<TimeTracking[]> {
+    return Array.from(this.timeTracking.values()).filter(t => t.userId === userId);
+  }
+
+  async createTimeTracking(insertTimeTracking: InsertTimeTracking): Promise<TimeTracking> {
+    const id = this.currentTimeTrackingId++;
+    const timeTracking: TimeTracking = { 
+      id, 
+      ...insertTimeTracking,
+      startTime: insertTimeTracking.startTime || null,
+      endTime: insertTimeTracking.endTime || null,
+      icon: insertTimeTracking.icon || null,
+      notes: insertTimeTracking.notes || null,
+      createdAt: new Date()
+    };
+    this.timeTracking.set(id, timeTracking);
+    return timeTracking;
+  }
+
+  async updateTimeTracking(id: number, updates: Partial<InsertTimeTracking>): Promise<TimeTracking | undefined> {
+    const timeTracking = this.timeTracking.get(id);
+    if (!timeTracking) return undefined;
+    
+    const updatedTimeTracking: TimeTracking = { ...timeTracking, ...updates };
+    this.timeTracking.set(id, updatedTimeTracking);
+    return updatedTimeTracking;
+  }
+
+  async deleteTimeTracking(id: number): Promise<boolean> {
+    return this.timeTracking.delete(id);
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -608,6 +648,34 @@ export class DatabaseStorage implements IStorage {
   async createMood(insertMood: InsertMood): Promise<Mood> {
     const [mood] = await db.insert(moods).values(insertMood).returning();
     return mood;
+  }
+
+  async getTimeTrackingByUserId(userId: number): Promise<TimeTracking[]> {
+    return await db.select().from(timeTracking).where(eq(timeTracking.userId, userId));
+  }
+
+  async createTimeTracking(insertTimeTracking: InsertTimeTracking): Promise<TimeTracking> {
+    const [timeTrackingRecord] = await db
+      .insert(timeTracking)
+      .values(insertTimeTracking)
+      .returning();
+    return timeTrackingRecord;
+  }
+
+  async updateTimeTracking(id: number, updates: Partial<InsertTimeTracking>): Promise<TimeTracking | undefined> {
+    const [timeTrackingRecord] = await db
+      .update(timeTracking)
+      .set(updates)
+      .where(eq(timeTracking.id, id))
+      .returning();
+    return timeTrackingRecord || undefined;
+  }
+
+  async deleteTimeTracking(id: number): Promise<boolean> {
+    const result = await db
+      .delete(timeTracking)
+      .where(eq(timeTracking.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 }
 

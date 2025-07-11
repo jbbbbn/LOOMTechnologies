@@ -115,6 +115,19 @@ export const moods = pgTable("moods", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const timeTracking = pgTable("time_tracking", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  activity: text("activity").notNull(), // 'TV', 'Exercise', 'Work', 'Study', 'Reading', etc.
+  duration: integer("duration").notNull(), // duration in minutes
+  startTime: text("start_time"), // ISO string format
+  endTime: text("end_time"), // ISO string format
+  date: text("date").notNull(), // YYYY-MM-DD format
+  icon: text("icon"), // icon name for the activity
+  notes: text("notes"), // optional notes about the activity
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertNoteSchema = createInsertSchema(notes).omit({ id: true, createdAt: true, updatedAt: true });
@@ -126,6 +139,7 @@ export const insertMediaSchema = createInsertSchema(media).omit({ id: true, crea
 export const insertAILearningSchema = createInsertSchema(aiLearning).omit({ id: true, timestamp: true });
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertMoodSchema = createInsertSchema(moods).omit({ id: true, createdAt: true });
+export const insertTimeTrackingSchema = createInsertSchema(timeTracking).omit({ id: true, createdAt: true });
 
 // Types
 // Relations
@@ -137,6 +151,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   media: many(media),
   aiLearning: many(aiLearning),
   userPreferences: many(userPreferences),
+  moods: many(moods),
+  timeTracking: many(timeTracking),
 }));
 
 export const notesRelations = relations(notes, ({ one }) => ({
@@ -188,6 +204,20 @@ export const userPreferencesRelations = relations(userPreferences, ({ one }) => 
   }),
 }));
 
+export const moodsRelations = relations(moods, ({ one }) => ({
+  user: one(users, {
+    fields: [moods.userId],
+    references: [users.id],
+  }),
+}));
+
+export const timeTrackingRelations = relations(timeTracking, ({ one }) => ({
+  user: one(users, {
+    fields: [timeTracking.userId],
+    references: [users.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Note = typeof notes.$inferSelect;
@@ -208,3 +238,5 @@ export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 export type Mood = typeof moods.$inferSelect;
 export type InsertMood = z.infer<typeof insertMoodSchema>;
+export type TimeTracking = typeof timeTracking.$inferSelect;
+export type InsertTimeTracking = z.infer<typeof insertTimeTrackingSchema>;
