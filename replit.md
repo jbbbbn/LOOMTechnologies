@@ -65,6 +65,8 @@ Preferred communication style: Simple, everyday language.
   - Added persistent chat history with localStorage integration
   - Enhanced chat interface with auto-scroll and clear history functionality
   - Loading states and better user feedback in chat interactions
+  - **Media Upload Fix**: Increased server request body limit to 50MB for Gallery uploads
+  - Fixed "PayloadTooLargeError" preventing media file uploads
 
 ## System Architecture
 
