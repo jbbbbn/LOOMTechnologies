@@ -143,6 +143,27 @@ export default function Calendar() {
     return new Date(dateTime).toLocaleDateString();
   };
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...updates }: { id: number; status?: string }) => {
+      const response = await apiRequest("PUT", `/api/events/${id}`, updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({ title: "Event updated successfully!" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update event", variant: "destructive" });
+    },
+  });
+
+  const handleUpdateEventStatus = (eventId: number, status: string) => {
+    updateMutation.mutate({
+      id: eventId,
+      status: status
+    });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -424,17 +445,59 @@ export default function Calendar() {
                 <div className="space-y-3">
                   {getUpcomingEvents().map((event) => (
                     <div key={event.id} className="border rounded-lg p-3 hover:bg-gray-50">
-                      <div className="font-medium text-sm mb-1">{event.title}</div>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="font-medium text-sm">{event.title}</div>
+                        {event.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {event.category}
+                          </Badge>
+                        )}
+                      </div>
                       <div className="flex items-center text-xs text-gray-600 mb-1">
                         <Clock className="w-3 h-3 mr-1" />
                         {formatDate(event.startTime)} at {formatTime(event.startTime)}
                       </div>
                       {event.location && (
-                        <div className="flex items-center text-xs text-gray-600">
+                        <div className="flex items-center text-xs text-gray-600 mb-2">
                           <MapPin className="w-3 h-3 mr-1" />
                           {event.location}
                         </div>
                       )}
+                      {event.status && event.status !== "pending" && (
+                        <div className="flex items-center text-xs mb-2">
+                          <Badge variant={event.status === "completed" ? "default" : "secondary"} className="text-xs">
+                            {event.status === "completed" && "✓ Completed"}
+                            {event.status === "skipped" && "⚠ Skipped"}
+                            {event.status === "postponed" && "⏰ Postponed"}
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="flex gap-1 mt-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-xs px-2 py-1 h-6"
+                          onClick={() => handleUpdateEventStatus(event.id, "completed")}
+                        >
+                          ✓ Complete
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-xs px-2 py-1 h-6"
+                          onClick={() => handleUpdateEventStatus(event.id, "skipped")}
+                        >
+                          ⚠ Skip
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-xs px-2 py-1 h-6"
+                          onClick={() => handleUpdateEventStatus(event.id, "postponed")}
+                        >
+                          ⏰ Postpone
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

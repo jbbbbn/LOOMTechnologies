@@ -101,6 +101,17 @@ export class OllamaService {
       if (lowerPrompt.includes('comics') && hasComicsNote) {
         return 'I can see you have a note about comics! You appear to be someone who enjoys comics and keeps organized lists for your weekly comic shop visits. This suggests you\'re a regular comic reader with specific preferences.';
       }
+      
+      // For work-related questions, check system prompt for calendar data
+      if (lowerPrompt.includes('work') && (lowerPrompt.includes('when') || lowerPrompt.includes('time') || lowerPrompt.includes('schedule'))) {
+        if (systemPrompt.includes('Work @ D-SYDE')) {
+          return 'Based on your calendar, you work at D-SYDE. I can see you have "Work @ D-SYDE" events scheduled in your calendar. You appear to have a structured work schedule there.';
+        } else if (systemPrompt.includes('Calendar Events:')) {
+          return 'I can see work-related events in your calendar. You have work commitments scheduled as part of your regular routine.';
+        } else {
+          return 'I don\'t see any work events in your current calendar. You can add work events to your LOOM Calendar to help me understand your work schedule better.';
+        }
+      }
     }
     
     // For questions about user's interests, provide context-aware responses

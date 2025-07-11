@@ -35,6 +35,7 @@ export const events = pgTable("events", {
   recurringEndDate: timestamp("recurring_end_date", { mode: 'string' }),
   category: text("category"), // 'gym', 'work', 'school', 'diet', 'personal'
   reminder: integer("reminder"), // minutes before event
+  status: text("status").default("pending"), // 'pending', 'completed', 'skipped', 'postponed'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
