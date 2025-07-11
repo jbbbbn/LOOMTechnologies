@@ -165,7 +165,7 @@ export class OllamaLangChainService {
     const { message, user_context, task_type } = context;
     const messageLower = message.toLowerCase();
 
-    // Handle specific questions about favorite singers vs albums
+    // Handle specific questions about favorite singers (plural)
     if (messageLower.includes("who are my favorite singers") || 
         messageLower.includes("favorite singers") ||
         messageLower.includes("my favorite singers")) {
@@ -176,11 +176,31 @@ export class OllamaLangChainService {
         );
         
         if (favoriteSingers) {
-          return `🎤 Your favorite singers are: **${favoriteSingers.value.replace('singers: ', '')}**\n\nThis preference was saved from your previous conversations.`;
+          return `Your favorite singers are: **${favoriteSingers.value.replace('singers: ', '')}**`;
         }
       }
       
-      return "I don't have information about your favorite singers saved yet. You can tell me about your music preferences and I'll remember them!";
+      return "I don't know your favorite singers yet. You can tell me about your music preferences and I'll remember them.";
+    }
+
+    // Handle questions about favorite singer (singular) - should be more specific
+    if ((messageLower.includes("my favorite singer") || 
+         messageLower.includes("favorite singer") ||
+         messageLower.includes("who is my favorite singer")) &&
+        !messageLower.includes("singers")) {
+      
+      if (user_context.preferences && user_context.preferences.length > 0) {
+        const favoriteSinger = user_context.preferences.find((pref: any) => 
+          pref.key === 'favorite_singer' || 
+          (pref.value.toLowerCase().includes('singer:') && !pref.value.toLowerCase().includes('singers'))
+        );
+        
+        if (favoriteSinger) {
+          return `Your favorite singer is: **${favoriteSinger.value.replace('singer: ', '')}**`;
+        }
+      }
+      
+      return "I don't know your favorite singer.";
     }
 
     // Handle favorite album questions
@@ -194,11 +214,11 @@ export class OllamaLangChainService {
         );
         
         if (favoriteAlbum) {
-          return `🎵 Your favorite album is: **My Beautiful Dark Twisted Fantasy by Kanye West**\n\nThis preference was saved from your previous conversations.`;
+          return `Your favorite album is: **My Beautiful Dark Twisted Fantasy by Kanye West**`;
         }
       }
       
-      return "I don't have information about your favorite album saved yet. You can tell me about your music preferences and I'll remember them!";
+      return "I don't know your favorite album yet. You can tell me about your music preferences and I'll remember them.";
     }
 
     // Handle "what do you know about me" questions
