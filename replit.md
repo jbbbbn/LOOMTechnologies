@@ -56,6 +56,10 @@ Preferred communication style: Simple, everyday language.
   - Enhanced fallback responses with better context parsing
   - Removed inappropriate web search triggers for personal questions
   - AI now provides concise, intelligent summaries of user data
+  - **AI Insights Enhancement**: Completely revamped insights generation
+  - Personalized activity analysis based on actual user behavior patterns
+  - Smart app usage tracking and optimization suggestions
+  - Replaced generic responses with specific, actionable insights
 
 ## System Architecture
 

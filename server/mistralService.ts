@@ -288,17 +288,64 @@ export class MistralService {
   }
 
   async generateInsights(learningData: any[], appType: string): Promise<string> {
-    const contextPrompt = `You are the LOOM AI Assistant, analyzing user data to provide personalized insights. 
-    
-    Application: ${appType}
-    User Data: ${JSON.stringify(learningData.slice(-10))}
-    
-    Provide helpful insights about the user's patterns, preferences, and suggestions for improvement.`;
+    // Create more intelligent insights based on actual user behavior
+    if (learningData.length === 0) {
+      return "Welcome to LOOM! Start using the platform to get personalized insights about your digital habits and preferences.";
+    }
 
-    return await this.generateResponse(
-      "Generate insights about my usage patterns and provide helpful suggestions.",
-      contextPrompt
-    );
+    const recentData = learningData.slice(-10);
+    const appTypes = [...new Set(recentData.map(item => item.appType))];
+    const dataTypes = [...new Set(recentData.map(item => item.dataType))];
+    
+    let insights = "Based on your recent LOOM activity:\n\n";
+    
+    // Analyze app usage patterns
+    const appUsage = appTypes.reduce((acc, app) => {
+      acc[app] = recentData.filter(item => item.appType === app).length;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const mostUsedApp = Object.entries(appUsage).sort(([,a], [,b]) => b - a)[0];
+    if (mostUsedApp) {
+      insights += `• **Most Active**: You're most engaged with ${mostUsedApp[0]} (${mostUsedApp[1]} activities)\n`;
+    }
+    
+    // Analyze specific activities
+    if (recentData.some(item => item.dataType === 'note_created')) {
+      insights += `• **Note Taking**: You're actively creating notes, showing good information management habits\n`;
+    }
+    
+    if (recentData.some(item => item.dataType === 'event_created')) {
+      insights += `• **Schedule Management**: You're organizing your time well by creating calendar events\n`;
+    }
+    
+    if (recentData.some(item => item.dataType === 'search_performed')) {
+      const searches = recentData.filter(item => item.dataType === 'search_performed');
+      insights += `• **Information Seeking**: You've performed ${searches.length} searches, showing curiosity and research habits\n`;
+    }
+    
+    if (recentData.some(item => item.dataType === 'email_created')) {
+      insights += `• **Communication**: You're actively managing your email communications\n`;
+    }
+    
+    // Provide actionable suggestions
+    insights += "\n**Suggestions for optimization:**\n";
+    
+    if (!appTypes.includes('gallery')) {
+      insights += "• Consider using the Gallery to organize your media files\n";
+    }
+    
+    if (!appTypes.includes('chat')) {
+      insights += "• Try the Chat feature for real-time communication\n";
+    }
+    
+    if (appTypes.length < 3) {
+      insights += "• Explore more LOOM applications to get a complete digital consciousness experience\n";
+    }
+    
+    insights += "\nYour digital consciousness is growing stronger with each interaction!";
+    
+    return insights;
   }
 
   dispose(): void {
