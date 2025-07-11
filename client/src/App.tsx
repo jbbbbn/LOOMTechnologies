@@ -4,7 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "@/components/Layout";
-import Home from "@/pages/Home";
+import Dashboard from "@/pages/Dashboard";
+import Landing from "@/pages/Landing";
 import Notes from "@/pages/Notes";
 import Calendar from "@/pages/Calendar";
 import Search from "@/pages/Search";
@@ -30,13 +31,19 @@ function Router() {
   }
 
   if (!isAuthenticated) {
-    return <Login />;
+    return (
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/" component={Landing} />
+        <Route component={Landing} />
+      </Switch>
+    );
   }
 
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
+        <Route path="/" component={Dashboard} />
         <Route path="/notes" component={Notes} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/search" component={Search} />
