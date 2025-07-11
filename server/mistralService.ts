@@ -208,15 +208,24 @@ export class MistralService {
       let response = "Based on your LOOM data, I can see several things about you:\n\n";
       
       if (userContext.notes?.length > 0) {
-        response += `• You have ${userContext.notes.length} notes, including topics like: ${userContext.notes.map((n: any) => n.title).join(', ')}\n`;
+        response += `• You have ${userContext.notes.length} note${userContext.notes.length > 1 ? 's' : ''}, including: ${userContext.notes.map((n: any) => n.title).join(', ')}\n`;
       }
       
       if (userContext.events?.length > 0) {
-        response += `• Your calendar shows events like: ${userContext.events.map((e: any) => e.title).join(', ')}\n`;
+        // Get unique event titles to avoid repetition
+        const uniqueEvents = [...new Set(userContext.events.map((e: any) => e.title))];
+        const eventCount = userContext.events.length;
+        
+        if (uniqueEvents.length === 1) {
+          response += `• Your calendar shows ${eventCount} "${uniqueEvents[0]}" events, indicating you work at D-SYDE\n`;
+        } else {
+          response += `• Your calendar has ${eventCount} events including: ${uniqueEvents.slice(0, 3).join(', ')}${uniqueEvents.length > 3 ? ', and others' : ''}\n`;
+        }
       }
       
       if (userContext.searches?.length > 0) {
-        response += `• You've recently searched for: ${userContext.searches.map((s: any) => s.query).join(', ')}\n`;
+        const uniqueSearches = [...new Set(userContext.searches.map((s: any) => s.query))];
+        response += `• You've recently searched for: ${uniqueSearches.join(', ')}\n`;
       }
       
       response += "\nThis gives me insights into your interests and helps me provide personalized assistance.";
@@ -233,7 +242,14 @@ export class MistralService {
     
     if (lowerPrompt.includes('calendar') || lowerPrompt.includes('schedule') || lowerPrompt.includes('can you see my calendar')) {
       if (userContext.events?.length > 0) {
-        return `Yes, I can see your calendar! You have ${userContext.events.length} events scheduled, including: ${userContext.events.map((e: any) => e.title).slice(0, 3).join(', ')}. How can I help you with your schedule?`;
+        const uniqueEvents = [...new Set(userContext.events.map((e: any) => e.title))];
+        const eventCount = userContext.events.length;
+        
+        if (uniqueEvents.length === 1) {
+          return `Yes, I can see your calendar! You have ${eventCount} "${uniqueEvents[0]}" events scheduled. How can I help you with your schedule?`;
+        } else {
+          return `Yes, I can see your calendar! You have ${eventCount} events scheduled including: ${uniqueEvents.slice(0, 3).join(', ')}. How can I help you with your schedule?`;
+        }
       }
       return "I can see your calendar events and help you manage your schedule. What would you like to know about your upcoming events?";
     }
