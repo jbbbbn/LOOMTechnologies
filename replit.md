@@ -8,6 +8,15 @@ LOOM is a revolutionary technology company that offers a groundbreaking device c
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- **January 11, 2025**: Added PostgreSQL database integration
+  - Created database connection with Drizzle ORM
+  - Implemented DatabaseStorage class to replace in-memory storage
+  - Added database relations for all entities
+  - Successfully deployed database schema with `npm run db:push`
+  - All data now persists across application restarts
+
 ## System Architecture
 
 ### Frontend Architecture

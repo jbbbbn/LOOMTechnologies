@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -91,6 +92,58 @@ export const insertMediaSchema = createInsertSchema(media).omit({ id: true, crea
 export const insertAILearningSchema = createInsertSchema(aiLearning).omit({ id: true, timestamp: true });
 
 // Types
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  notes: many(notes),
+  events: many(events),
+  searches: many(searches),
+  emails: many(emails),
+  media: many(media),
+  aiLearning: many(aiLearning),
+}));
+
+export const notesRelations = relations(notes, ({ one }) => ({
+  user: one(users, {
+    fields: [notes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const eventsRelations = relations(events, ({ one }) => ({
+  user: one(users, {
+    fields: [events.userId],
+    references: [users.id],
+  }),
+}));
+
+export const searchesRelations = relations(searches, ({ one }) => ({
+  user: one(users, {
+    fields: [searches.userId],
+    references: [users.id],
+  }),
+}));
+
+export const emailsRelations = relations(emails, ({ one }) => ({
+  user: one(users, {
+    fields: [emails.userId],
+    references: [users.id],
+  }),
+}));
+
+export const mediaRelations = relations(media, ({ one }) => ({
+  user: one(users, {
+    fields: [media.userId],
+    references: [users.id],
+  }),
+}));
+
+export const aiLearningRelations = relations(aiLearning, ({ one }) => ({
+  user: one(users, {
+    fields: [aiLearning.userId],
+    references: [users.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Note = typeof notes.$inferSelect;

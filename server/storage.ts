@@ -4,6 +4,8 @@ import {
   type Search, type InsertSearch, type Email, type InsertEmail, type Message, type InsertMessage,
   type Media, type InsertMedia, type AILearning, type InsertAILearning
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -295,4 +297,184 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getNotesByUserId(userId: number): Promise<Note[]> {
+    return await db.select().from(notes).where(eq(notes.userId, userId));
+  }
+
+  async getNote(id: number): Promise<Note | undefined> {
+    const [note] = await db.select().from(notes).where(eq(notes.id, id));
+    return note || undefined;
+  }
+
+  async createNote(insertNote: InsertNote): Promise<Note> {
+    const [note] = await db
+      .insert(notes)
+      .values(insertNote)
+      .returning();
+    return note;
+  }
+
+  async updateNote(id: number, updates: Partial<InsertNote>): Promise<Note | undefined> {
+    const [note] = await db
+      .update(notes)
+      .set(updates)
+      .where(eq(notes.id, id))
+      .returning();
+    return note || undefined;
+  }
+
+  async deleteNote(id: number): Promise<boolean> {
+    const result = await db.delete(notes).where(eq(notes.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getEventsByUserId(userId: number): Promise<Event[]> {
+    return await db.select().from(events).where(eq(events.userId, userId));
+  }
+
+  async getEvent(id: number): Promise<Event | undefined> {
+    const [event] = await db.select().from(events).where(eq(events.id, id));
+    return event || undefined;
+  }
+
+  async createEvent(insertEvent: InsertEvent): Promise<Event> {
+    const [event] = await db
+      .insert(events)
+      .values(insertEvent)
+      .returning();
+    return event;
+  }
+
+  async updateEvent(id: number, updates: Partial<InsertEvent>): Promise<Event | undefined> {
+    const [event] = await db
+      .update(events)
+      .set(updates)
+      .where(eq(events.id, id))
+      .returning();
+    return event || undefined;
+  }
+
+  async deleteEvent(id: number): Promise<boolean> {
+    const result = await db.delete(events).where(eq(events.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getSearchesByUserId(userId: number): Promise<Search[]> {
+    return await db.select().from(searches).where(eq(searches.userId, userId));
+  }
+
+  async createSearch(insertSearch: InsertSearch): Promise<Search> {
+    const [search] = await db
+      .insert(searches)
+      .values(insertSearch)
+      .returning();
+    return search;
+  }
+
+  async getEmailsByUserId(userId: number): Promise<Email[]> {
+    return await db.select().from(emails).where(eq(emails.userId, userId));
+  }
+
+  async getEmail(id: number): Promise<Email | undefined> {
+    const [email] = await db.select().from(emails).where(eq(emails.id, id));
+    return email || undefined;
+  }
+
+  async createEmail(insertEmail: InsertEmail): Promise<Email> {
+    const [email] = await db
+      .insert(emails)
+      .values(insertEmail)
+      .returning();
+    return email;
+  }
+
+  async updateEmail(id: number, updates: Partial<InsertEmail>): Promise<Email | undefined> {
+    const [email] = await db
+      .update(emails)
+      .set(updates)
+      .where(eq(emails.id, id))
+      .returning();
+    return email || undefined;
+  }
+
+  async deleteEmail(id: number): Promise<boolean> {
+    const result = await db.delete(emails).where(eq(emails.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getMessagesByRoomId(roomId: string): Promise<Message[]> {
+    return await db.select().from(messages).where(eq(messages.roomId, roomId));
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const [message] = await db
+      .insert(messages)
+      .values(insertMessage)
+      .returning();
+    return message;
+  }
+
+  async getMediaByUserId(userId: number): Promise<Media[]> {
+    return await db.select().from(media).where(eq(media.userId, userId));
+  }
+
+  async getMedia(id: number): Promise<Media | undefined> {
+    const [mediaItem] = await db.select().from(media).where(eq(media.id, id));
+    return mediaItem || undefined;
+  }
+
+  async createMedia(insertMedia: InsertMedia): Promise<Media> {
+    const [mediaItem] = await db
+      .insert(media)
+      .values(insertMedia)
+      .returning();
+    return mediaItem;
+  }
+
+  async updateMedia(id: number, updates: Partial<InsertMedia>): Promise<Media | undefined> {
+    const [mediaItem] = await db
+      .update(media)
+      .set(updates)
+      .where(eq(media.id, id))
+      .returning();
+    return mediaItem || undefined;
+  }
+
+  async deleteMedia(id: number): Promise<boolean> {
+    const result = await db.delete(media).where(eq(media.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getAILearningByUserId(userId: number): Promise<AILearning[]> {
+    return await db.select().from(aiLearning).where(eq(aiLearning.userId, userId));
+  }
+
+  async createAILearning(insertAILearning: InsertAILearning): Promise<AILearning> {
+    const [learning] = await db
+      .insert(aiLearning)
+      .values(insertAILearning)
+      .returning();
+    return learning;
+  }
+}
+
+export const storage = new DatabaseStorage();
