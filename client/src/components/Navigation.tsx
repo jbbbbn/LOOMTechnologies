@@ -1,5 +1,7 @@
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
 import { 
   StickyNote, 
   Calendar, 
@@ -11,7 +13,8 @@ import {
   Bell,
   User,
   LogOut,
-  Bot
+  Bot,
+  Menu
 } from "lucide-react";
 import loomLogo from "@assets/LOOM_logo_2_1752244843559.jpg";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +22,7 @@ import { useAuth } from "@/hooks/useAuth";
 export function Navigation() {
   const [location] = useLocation();
   const { logout, user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Home },
@@ -43,6 +47,8 @@ export function Navigation() {
                 className="w-10 h-10 rounded-lg object-cover"
               />
             </div>
+            
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -64,13 +70,47 @@ export function Navigation() {
               })}
             </nav>
           </div>
+          
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm">
+            {/* Mobile Menu */}
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="md:hidden">
+                  <Menu className="w-4 h-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64">
+                <div className="flex flex-col space-y-4 mt-8">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location === item.path;
+                    return (
+                      <Button
+                        key={item.path}
+                        variant={isActive ? "default" : "ghost"}
+                        size="sm"
+                        asChild
+                        className={`justify-start ${isActive ? "bg-[var(--loom-orange)] hover:bg-[var(--loom-light)]" : ""}`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Link href={item.path} className="flex items-center space-x-2">
+                          <Icon className="w-4 h-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </SheetContent>
+            </Sheet>
+            
+            <Button variant="ghost" size="sm" className="hidden sm:flex">
               <Bell className="w-4 h-4" />
             </Button>
+            
             {user && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">{user.email}</span>
+                <span className="text-sm text-gray-600 hidden sm:block">{user.email}</span>
                 <Button variant="ghost" size="sm" onClick={logout}>
                   <LogOut className="w-4 h-4" />
                 </Button>
