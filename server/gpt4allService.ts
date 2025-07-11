@@ -7,7 +7,8 @@ export class GPT4AllService {
   private modelName = 'mistral-7b-openorca.gguf2.Q4_0.gguf'; // Good balance of quality and speed
 
   constructor() {
-    this.initializeModel();
+    // Temporarily disable GPT4All initialization to avoid system errors
+    // this.initializeModel();
   }
 
   private async initializeModel(): Promise<void> {
