@@ -233,7 +233,8 @@ export class GPT4AllService {
           note.content?.toLowerCase().includes('comic')
         );
         if (comicNotes.length > 0) {
-          evidence.push(`I found ${comicNotes.length} note(s) about comics, including "${comicNotes[0].title}"`);
+          const comicList = comicNotes[0].content || '';
+          evidence.push(`I found ${comicNotes.length} note(s) about comics, including "${comicNotes[0].title}" which contains: ${comicList}`);
         }
       }
       
@@ -259,7 +260,20 @@ export class GPT4AllService {
       }
       
       if (evidence.length > 0) {
-        return `Yes, based on your LOOM data, you definitely like comics! Here's what I found: ${evidence.join(', ')}. Your digital activity shows clear interest in comics.`;
+        // Extract specific comic names from the content
+        const comicContent = userContext.notes?.find((note: any) => 
+          note.title?.toLowerCase().includes('comic') || 
+          note.content?.toLowerCase().includes('comic')
+        )?.content || '';
+        
+        const specificComics = this.extractComicNames(comicContent);
+        let response = `Yes, based on your LOOM data, you definitely like comics! Here's what I found: ${evidence.join(', ')}. Your digital activity shows clear interest in comics.`;
+        
+        if (specificComics.length > 0) {
+          response += ` Specifically, your Comics List includes: ${specificComics.join(', ')}.`;
+        }
+        
+        return response;
       } else {
         return `Looking through your LOOM data (notes, searches, calendar, emails, and media), I don't see strong evidence of comic interest. Your current activities focus on other areas.`;
       }
@@ -328,6 +342,19 @@ export class GPT4AllService {
     }
     
     return null;
+  }
+
+  private extractComicNames(content: string): string[] {
+    if (!content) return [];
+    
+    // Split by common separators and clean up
+    const lines = content.split(/[\n\r,;]/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('-') && !line.startsWith('*'))
+      .map(line => line.replace(/^[-*•]\s*/, '').trim())
+      .filter(line => line.length > 2);
+    
+    return lines.slice(0, 10); // Limit to first 10 items
   }
 
   private analyzeTopicAcrossAllData(topic: string, userContext: any): string {

@@ -42,6 +42,11 @@ Preferred communication style: Simple, everyday language.
   - Enhanced AI reasoning, conversation quality, and context understanding
   - Maintained complete privacy with local processing
   - Improved AI interrupt system and fallback responses
+  - **Latest**: Enhanced AI to read actual note content and extract specific details
+  - AI now reads Comics List content and tells you exactly which comics you like
+  - Added web search capability for additional context and current information
+  - AI provides evidence-based answers with specific examples from your data
+  - When asked "which comics do I like?" AI extracts comic names from note content
 
 ## System Architecture
 

@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { aiService } from "./aiService";
 import { gpt4allService } from "./gpt4allService";
 import { storage } from "./storage";
+import { performWebSearch } from "./searchService";
 import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSchema, insertMessageSchema, insertMediaSchema, insertAILearningSchema } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -595,9 +596,34 @@ User's Data Context:
 - Media: ${JSON.stringify(userContext.media)}
 - Activities: ${JSON.stringify(userContext.activities)}
 
-Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.`;
+Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.
+
+If the user asks about topics that might benefit from current information or wants to learn more about something, you can also search the internet for additional context.`;
       
-      const response = await gpt4allService.generateResponse(message, systemPrompt);
+      // Check if the user is asking for web search
+      const needsWebSearch = message.toLowerCase().includes('search') || 
+                           message.toLowerCase().includes('latest') ||
+                           message.toLowerCase().includes('current') ||
+                           message.toLowerCase().includes('news') ||
+                           message.toLowerCase().includes('what happened') ||
+                           message.toLowerCase().includes('tell me more');
+      
+      let response = await gpt4allService.generateResponse(message, systemPrompt);
+      
+      // If it's a question that could benefit from web search, add web results
+      if (needsWebSearch || message.includes('?')) {
+        try {
+          const searchResults = await performWebSearch(message);
+          if (searchResults.results.length > 0) {
+            const webInfo = searchResults.results.slice(0, 3).map(r => 
+              `${r.title}: ${r.snippet}`
+            ).join('\n');
+            response += `\n\nHere's some additional information from the web:\n${webInfo}`;
+          }
+        } catch (error) {
+          console.log('Web search failed, using local data only');
+        }
+      }
       
       res.json({ response });
     } catch (error) {
