@@ -60,6 +60,11 @@ Preferred communication style: Simple, everyday language.
   - Personalized activity analysis based on actual user behavior patterns
   - Smart app usage tracking and optimization suggestions
   - Replaced generic responses with specific, actionable insights
+  - **UI Enhancement**: Improved AI insights with proper markdown formatting
+  - Bold text now displays correctly with visual headers and emojis
+  - Added persistent chat history with localStorage integration
+  - Enhanced chat interface with auto-scroll and clear history functionality
+  - Loading states and better user feedback in chat interactions
 
 ## System Architecture
 

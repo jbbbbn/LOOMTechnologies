@@ -297,7 +297,7 @@ export class MistralService {
     const appTypes = [...new Set(recentData.map(item => item.appType))];
     const dataTypes = [...new Set(recentData.map(item => item.dataType))];
     
-    let insights = "Based on your recent LOOM activity:\n\n";
+    let insights = "## Your LOOM Activity Summary\n\n";
     
     // Analyze app usage patterns
     const appUsage = appTypes.reduce((acc, app) => {
@@ -307,43 +307,43 @@ export class MistralService {
     
     const mostUsedApp = Object.entries(appUsage).sort(([,a], [,b]) => b - a)[0];
     if (mostUsedApp) {
-      insights += `• **Most Active**: You're most engaged with ${mostUsedApp[0]} (${mostUsedApp[1]} activities)\n`;
+      insights += `🎯 **Most Active**: You're most engaged with ${mostUsedApp[0]} (${mostUsedApp[1]} activities)\n\n`;
     }
     
     // Analyze specific activities
     if (recentData.some(item => item.dataType === 'note_created')) {
-      insights += `• **Note Taking**: You're actively creating notes, showing good information management habits\n`;
+      insights += `📝 **Note Taking**: You're actively creating notes, showing good information management habits\n\n`;
     }
     
     if (recentData.some(item => item.dataType === 'event_created')) {
-      insights += `• **Schedule Management**: You're organizing your time well by creating calendar events\n`;
+      insights += `📅 **Schedule Management**: You're organizing your time well by creating calendar events\n\n`;
     }
     
     if (recentData.some(item => item.dataType === 'search_performed')) {
       const searches = recentData.filter(item => item.dataType === 'search_performed');
-      insights += `• **Information Seeking**: You've performed ${searches.length} searches, showing curiosity and research habits\n`;
+      insights += `🔍 **Information Seeking**: You've performed ${searches.length} searches, showing curiosity and research habits\n\n`;
     }
     
     if (recentData.some(item => item.dataType === 'email_created')) {
-      insights += `• **Communication**: You're actively managing your email communications\n`;
+      insights += `📧 **Communication**: You're actively managing your email communications\n\n`;
     }
     
     // Provide actionable suggestions
-    insights += "\n**Suggestions for optimization:**\n";
+    insights += "## Suggestions for Better Experience\n\n";
     
     if (!appTypes.includes('gallery')) {
-      insights += "• Consider using the Gallery to organize your media files\n";
+      insights += "📸 Consider using the Gallery to organize your media files\n\n";
     }
     
     if (!appTypes.includes('chat')) {
-      insights += "• Try the Chat feature for real-time communication\n";
+      insights += "💬 Try the Chat feature for real-time communication\n\n";
     }
     
     if (appTypes.length < 3) {
-      insights += "• Explore more LOOM applications to get a complete digital consciousness experience\n";
+      insights += "🚀 Explore more LOOM applications to get a complete digital consciousness experience\n\n";
     }
     
-    insights += "\nYour digital consciousness is growing stronger with each interaction!";
+    insights += "🧠 **Your digital consciousness is growing stronger with each interaction!**";
     
     return insights;
   }

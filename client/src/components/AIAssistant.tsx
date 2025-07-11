@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronUp, ChevronDown, Bot, Send, Sparkles, MessageCircle } from "lucide-react";
+import { ChevronUp, ChevronDown, Bot, Send, Sparkles, MessageCircle, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+  timestamp: number;
 }
 
 export function AIAssistant() {
@@ -19,6 +20,33 @@ export function AIAssistant() {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const queryClient = useQueryClient();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('loom-ai-chat-history');
+    if (savedHistory) {
+      try {
+        setChatHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+      }
+    }
+  }, []);
+
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    if (chatHistory.length > 0) {
+      localStorage.setItem('loom-ai-chat-history', JSON.stringify(chatHistory));
+    }
+  }, [chatHistory]);
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
 
   const { data: insights, isLoading: insightsLoading } = useQuery({
     queryKey: ["/api/ai/insights"],
@@ -31,10 +59,11 @@ export function AIAssistant() {
       return response.json();
     },
     onSuccess: (data) => {
+      const now = Date.now();
       setChatHistory(prev => [
         ...prev,
-        { role: "user", content: message },
-        { role: "assistant", content: data.response }
+        { role: "user", content: message, timestamp: now },
+        { role: "assistant", content: data.response, timestamp: now + 1 }
       ]);
       setMessage("");
     },
@@ -44,6 +73,11 @@ export function AIAssistant() {
     if (message.trim()) {
       chatMutation.mutate(message);
     }
+  };
+
+  const clearChatHistory = () => {
+    setChatHistory([]);
+    localStorage.removeItem('loom-ai-chat-history');
   };
 
   return (
@@ -85,19 +119,40 @@ export function AIAssistant() {
                   <div className="animate-pulse bg-gray-200 h-16 rounded"></div>
                 ) : (
                   <div className="bg-gray-50 p-3 rounded-lg text-sm">
-                    {insights?.insights || "Start using LOOM apps to get personalized insights!"}
+                    <div 
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: (insights?.insights || "Start using LOOM apps to get personalized insights!")
+                          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                          .replace(/##\s*(.*?)$/gm, '<h3 class="text-base font-semibold mb-2 text-gray-800">$1</h3>')
+                          .replace(/\n\n/g, '<br><br>')
+                          .replace(/\n/g, '<br>')
+                      }}
+                    />
                   </div>
                 )}
               </div>
 
               {/* Chat Interface */}
               <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <MessageCircle className="w-4 h-4 text-[var(--loom-orange)]" />
-                  <span className="text-sm font-medium">Chat with AI</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <MessageCircle className="w-4 h-4 text-[var(--loom-orange)]" />
+                    <span className="text-sm font-medium">Chat with AI</span>
+                  </div>
+                  {chatHistory.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearChatHistory}
+                      className="text-gray-500 hover:text-red-500"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
                 
-                <ScrollArea className="h-40 w-full border rounded-lg p-3">
+                <ScrollArea className="h-40 w-full border rounded-lg p-3" ref={scrollAreaRef}>
                   {chatHistory.length === 0 ? (
                     <div className="text-sm text-gray-500 text-center py-8">
                       Ask me anything about your LOOM data!
@@ -105,16 +160,31 @@ export function AIAssistant() {
                   ) : (
                     <div className="space-y-3">
                       {chatHistory.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div key={msg.timestamp || idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[80%] p-2 rounded-lg text-sm ${
                             msg.role === 'user' 
                               ? 'bg-[var(--loom-orange)] text-white' 
                               : 'bg-gray-100 text-gray-900'
                           }`}>
-                            {msg.content}
+                            <div 
+                              className="prose prose-sm max-w-none"
+                              dangerouslySetInnerHTML={{
+                                __html: msg.content
+                                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                  .replace(/\n\n/g, '<br><br>')
+                                  .replace(/\n/g, '<br>')
+                              }}
+                            />
                           </div>
                         </div>
                       ))}
+                      {chatMutation.isPending && (
+                        <div className="flex justify-start">
+                          <div className="bg-gray-100 text-gray-900 p-2 rounded-lg text-sm">
+                            <div className="animate-pulse">Thinking...</div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </ScrollArea>
