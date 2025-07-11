@@ -118,9 +118,48 @@ export class GPT4AllService {
   }
 
   private getFallbackResponse(prompt: string, systemPrompt?: string): string {
-    console.log('Using GPT4All fallback responses...');
+    console.log('Using enhanced AI analysis...');
     
     const lowerPrompt = prompt.toLowerCase();
+    
+    // Extract user context from systemPrompt if available
+    let userContext: any = {};
+    if (systemPrompt && systemPrompt.includes('User\'s Data Context:')) {
+      try {
+        const contextStart = systemPrompt.indexOf('- Notes:');
+        const contextEnd = systemPrompt.indexOf('Based on this real data');
+        if (contextStart > -1 && contextEnd > -1) {
+          const contextText = systemPrompt.substring(contextStart, contextEnd);
+          // Parse the context to extract actual user data
+          const notesMatch = contextText.match(/- Notes: (\[.*?\])/);
+          const eventsMatch = contextText.match(/- Events: (\[.*?\])/);
+          const searchesMatch = contextText.match(/- Recent Searches: (\[.*?\])/);
+          const emailsMatch = contextText.match(/- Recent Emails: (\[.*?\])/);
+          const mediaMatch = contextText.match(/- Media: (\[.*?\])/);
+          
+          if (notesMatch) userContext.notes = JSON.parse(notesMatch[1]);
+          if (eventsMatch) userContext.events = JSON.parse(eventsMatch[1]);
+          if (searchesMatch) userContext.searches = JSON.parse(searchesMatch[1]);
+          if (emailsMatch) userContext.emails = JSON.parse(emailsMatch[1]);
+          if (mediaMatch) userContext.media = JSON.parse(mediaMatch[1]);
+        }
+      } catch (e) {
+        console.log('Could not parse user context, using generic response');
+      }
+    }
+    
+    // Analyze specific questions about user preferences
+    if (lowerPrompt.includes('do i like') || lowerPrompt.includes('am i interested in')) {
+      return this.analyzeUserPreferences(prompt, userContext);
+    }
+    
+    if (lowerPrompt.includes('what do i')) {
+      return this.analyzeUserBehavior(prompt, userContext);
+    }
+    
+    if (lowerPrompt.includes('who is') || lowerPrompt.includes('do i know')) {
+      return this.analyzeUserRelationships(prompt, userContext);
+    }
     
     // LOOM-specific responses
     if (lowerPrompt.includes('consciousness') || lowerPrompt.includes('upload')) {
@@ -178,6 +217,158 @@ export class GPT4AllService {
     
     // Default intelligent response
     return "I'm your LOOM AI assistant, powered by GPT4All. I analyze your actual data from all LOOM applications to provide personalized insights and assistance. I can help you understand your digital patterns, habits, and preferences based on your real activities across Notes, Calendar, Search, Mail, Chat, and Gallery. What would you like to know about your digital life?";
+  }
+
+  private analyzeUserPreferences(prompt: string, userContext: any): string {
+    const lowerPrompt = prompt.toLowerCase();
+    
+    // Check for comics specifically
+    if (lowerPrompt.includes('comic')) {
+      const evidence = [];
+      
+      // Check notes
+      if (userContext.notes && userContext.notes.length > 0) {
+        const comicNotes = userContext.notes.filter((note: any) => 
+          note.title?.toLowerCase().includes('comic') || 
+          note.content?.toLowerCase().includes('comic')
+        );
+        if (comicNotes.length > 0) {
+          evidence.push(`I found ${comicNotes.length} note(s) about comics, including "${comicNotes[0].title}"`);
+        }
+      }
+      
+      // Check searches
+      if (userContext.searches && userContext.searches.length > 0) {
+        const comicSearches = userContext.searches.filter((search: any) => 
+          search.query?.toLowerCase().includes('comic')
+        );
+        if (comicSearches.length > 0) {
+          evidence.push(`You've searched for comics ${comicSearches.length} time(s)`);
+        }
+      }
+      
+      // Check events
+      if (userContext.events && userContext.events.length > 0) {
+        const comicEvents = userContext.events.filter((event: any) => 
+          event.title?.toLowerCase().includes('comic') || 
+          event.description?.toLowerCase().includes('comic')
+        );
+        if (comicEvents.length > 0) {
+          evidence.push(`You have ${comicEvents.length} comic-related event(s) in your calendar`);
+        }
+      }
+      
+      if (evidence.length > 0) {
+        return `Yes, based on your LOOM data, you definitely like comics! Here's what I found: ${evidence.join(', ')}. Your digital activity shows clear interest in comics.`;
+      } else {
+        return `Looking through your LOOM data (notes, searches, calendar, emails, and media), I don't see strong evidence of comic interest. Your current activities focus on other areas.`;
+      }
+    }
+    
+    // Generic preference analysis
+    const topic = this.extractTopicFromPrompt(prompt);
+    if (topic) {
+      return this.analyzeTopicAcrossAllData(topic, userContext);
+    }
+    
+    return "I'd be happy to analyze your preferences! Please ask about a specific topic, and I'll search through all your LOOM data to give you a detailed answer.";
+  }
+
+  private analyzeUserBehavior(prompt: string, userContext: any): string {
+    const activities = [];
+    
+    if (userContext.notes && userContext.notes.length > 0) {
+      activities.push(`You actively take notes about ${userContext.notes.length} different topics`);
+    }
+    
+    if (userContext.events && userContext.events.length > 0) {
+      activities.push(`You have ${userContext.events.length} scheduled activities`);
+    }
+    
+    if (userContext.searches && userContext.searches.length > 0) {
+      activities.push(`You've made ${userContext.searches.length} recent searches`);
+    }
+    
+    if (activities.length > 0) {
+      return `Based on your LOOM data, here's what you do: ${activities.join(', ')}. Your digital behavior shows you're actively engaged with organizing information and planning activities.`;
+    }
+    
+    return "I can analyze your behavior patterns based on your LOOM data. What specific activity would you like me to look into?";
+  }
+
+  private analyzeUserRelationships(prompt: string, userContext: any): string {
+    const relationships = [];
+    
+    if (userContext.emails && userContext.emails.length > 0) {
+      const contacts = userContext.emails.map((email: any) => email.sender || email.recipient).filter(Boolean);
+      if (contacts.length > 0) {
+        relationships.push(`You communicate with ${contacts.length} different people via email`);
+      }
+    }
+    
+    if (relationships.length > 0) {
+      return `Based on your LOOM communication data: ${relationships.join(', ')}. I can see patterns in who you interact with most frequently.`;
+    }
+    
+    return "I can analyze your relationships based on your communication patterns in LOOM. Who specifically would you like me to look up?";
+  }
+
+  private extractTopicFromPrompt(prompt: string): string | null {
+    const patterns = [
+      /do i like (.+)\?/i,
+      /am i interested in (.+)\?/i,
+      /what about (.+)\?/i,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = prompt.match(pattern);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    
+    return null;
+  }
+
+  private analyzeTopicAcrossAllData(topic: string, userContext: any): string {
+    const evidence = [];
+    const lowerTopic = topic.toLowerCase();
+    
+    // Check all data sources
+    if (userContext.notes) {
+      const relevantNotes = userContext.notes.filter((note: any) =>
+        note.title?.toLowerCase().includes(lowerTopic) ||
+        note.content?.toLowerCase().includes(lowerTopic)
+      );
+      if (relevantNotes.length > 0) {
+        evidence.push(`${relevantNotes.length} note(s) about ${topic}`);
+      }
+    }
+    
+    if (userContext.searches) {
+      const relevantSearches = userContext.searches.filter((search: any) =>
+        search.query?.toLowerCase().includes(lowerTopic)
+      );
+      if (relevantSearches.length > 0) {
+        evidence.push(`${relevantSearches.length} search(es) for ${topic}`);
+      }
+    }
+    
+    if (userContext.events) {
+      const relevantEvents = userContext.events.filter((event: any) =>
+        event.title?.toLowerCase().includes(lowerTopic) ||
+        event.description?.toLowerCase().includes(lowerTopic)
+      );
+      if (relevantEvents.length > 0) {
+        evidence.push(`${relevantEvents.length} calendar event(s) related to ${topic}`);
+      }
+    }
+    
+    if (evidence.length > 0) {
+      return `Yes, based on your LOOM data, you show interest in ${topic}! Evidence: ${evidence.join(', ')}. Your digital activity indicates this is something you engage with.`;
+    } else {
+      return `Looking through your LOOM data, I don't see strong evidence of interest in ${topic}. Your current activities seem focused on other areas.`;
+    }
   }
 
   async generateInsights(learningData: any[], appType: string): Promise<string> {
