@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search as SearchIcon, ExternalLink, Clock, TrendingUp } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import GoogleCustomSearch from "@/components/GoogleCustomSearch";
 import type { Search } from "@shared/schema";
 
 export default function Search() {
@@ -100,7 +101,9 @@ export default function Search() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Search Results */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Google Custom Search */}
+          <GoogleCustomSearch />
           {searchMutation.isPending ? (
             <Card>
               <CardContent className="pt-6">

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardWidgets } from "@/components/DashboardWidgets";
-import MoodTracker from "@/components/MoodTracker";
+import SimpleMoodTracker from "@/components/SimpleMoodTracker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -238,7 +238,7 @@ export default function Dashboard() {
 
       {/* Mood Tracker */}
       <div className="mt-8">
-        <MoodTracker className="" />
+        <SimpleMoodTracker className="" />
       </div>
 
       {/* New Dashboard Widgets */}
