@@ -164,11 +164,13 @@ export class OllamaLangChainService {
   private async generateWithFallback(context: TaskContext): Promise<string> {
     const { message, user_context, task_type } = context;
     const messageLower = message.toLowerCase();
+    
+    // Debug logging
+    console.log(`AI processing message: "${message}"`);
+    console.log(`Checking patterns for: "${messageLower}"`);
 
     // Handle specific questions about favorite singers (plural)
-    if (messageLower.includes("who are my favorite singers") || 
-        messageLower.includes("favorite singers") ||
-        messageLower.includes("my favorite singers")) {
+    if (messageLower.includes("singers") && !messageLower.includes("singer?") && !messageLower.includes("who is")) {
       
       if (user_context.preferences && user_context.preferences.length > 0) {
         const favoriteSingers = user_context.preferences.find((pref: any) => 
@@ -180,7 +182,7 @@ export class OllamaLangChainService {
         }
       }
       
-      return "I don't know your favorite singers yet. You can tell me about your music preferences and I'll remember them.";
+      return "I don't know your favorite singers yet.";
     }
 
     // Handle questions about favorite singer (singular) - should be more specific
@@ -222,10 +224,7 @@ export class OllamaLangChainService {
     }
 
     // Handle TV series questions
-    if (messageLower.includes("what's my favorite tv series") || 
-        messageLower.includes("favorite tv series") ||
-        messageLower.includes("my favorite tv series") ||
-        messageLower.includes("favorite series")) {
+    if (messageLower.includes("tv series") || messageLower.includes("series")) {
       
       if (user_context.preferences && user_context.preferences.length > 0) {
         const favoriteTvSeries = user_context.preferences.find((pref: any) => 
@@ -238,7 +237,7 @@ export class OllamaLangChainService {
         }
       }
       
-      return "I don't know your favorite TV series yet. You can tell me about your entertainment preferences and I'll remember them.";
+      return "I don't know your favorite TV series yet.";
     }
 
     // Handle "what do you know about me" questions
