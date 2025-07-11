@@ -739,12 +739,26 @@ Focus on providing detailed, personalized responses using the user's actual data
       }
 
       // Use proper LangChain + Ollama + ChromaDB vector orchestrator
-      const { vectorOrchestrator } = await import('./vectorService');
-      const aiResponse = await vectorOrchestrator.orchestrateTask(
-        message,
-        userId,
-        userContext
-      );
+      console.log('🚀 Loading vector orchestrator...');
+      let aiResponse;
+      try {
+        const { vectorOrchestrator } = await import('./vectorService');
+        console.log('✅ Vector orchestrator loaded successfully');
+        aiResponse = await vectorOrchestrator.orchestrateTask(
+          message,
+          userId,
+          userContext
+        );
+        console.log('✅ Vector orchestrator response:', aiResponse.tools_used);
+      } catch (error) {
+        console.log('❌ Vector orchestrator failed:', error);
+        // Fallback to old system
+        aiResponse = await ollamaLangChainService.orchestrateTask(
+          message,
+          userId,
+          userContext
+        );
+      }
       
       let response = aiResponse.response;
       
