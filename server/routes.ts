@@ -107,9 +107,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      res.json({ id: user.id, email: user.email, username: user.username });
+      res.json({ 
+        id: user.id, 
+        email: user.email, 
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName
+      });
     } catch (error) {
       res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  app.put("/api/auth/profile", authenticateToken, async (req, res) => {
+    try {
+      const { username, firstName, lastName } = req.body;
+      const userId = (req as any).user.userId;
+      
+      // Update user profile
+      const updatedUser = await storage.updateUser(userId, {
+        username,
+        firstName,
+        lastName
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json({ 
+        id: updatedUser.id, 
+        email: updatedUser.email, 
+        username: updatedUser.username,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
     }
   });
 

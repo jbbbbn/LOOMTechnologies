@@ -14,7 +14,8 @@ import {
   User,
   LogOut,
   Bot,
-  Menu
+  Menu,
+  Settings
 } from "lucide-react";
 import loomLogo from "@assets/LOOM_logo_2_1752244843559.jpg";
 import { useAuth } from "@/hooks/useAuth";
@@ -106,6 +107,12 @@ export function Navigation() {
             
             <Button variant="ghost" size="sm" className="hidden sm:flex">
               <Bell className="w-4 h-4" />
+            </Button>
+            
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/settings">
+                <Settings className="w-4 h-4" />
+              </Link>
             </Button>
             
             {user && (

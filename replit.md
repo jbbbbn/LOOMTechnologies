@@ -67,6 +67,12 @@ Preferred communication style: Simple, everyday language.
   - Loading states and better user feedback in chat interactions
   - **Media Upload Fix**: Increased server request body limit to 50MB for Gallery uploads
   - Fixed "PayloadTooLargeError" preventing media file uploads
+  - **Settings Page**: Complete settings system with theme switcher, profile management, and consciousness controls
+  - Proper theme provider with light/dark/system modes that persist across sessions
+  - User profile editing with first name, last name, and username fields
+  - Consciousness toggle to enable/disable AI learning and insights
+  - Language selection with 10 supported languages
+  - System information display showing platform version and connected apps
 
 ## System Architecture
 
