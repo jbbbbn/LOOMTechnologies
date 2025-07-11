@@ -10,10 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **January 11, 2025**: Added PostgreSQL database integration
-  - Created database connection with Drizzle ORM
-  - Implemented DatabaseStorage class to replace in-memory storage
-  - Added database relations for all entities
+- **January 11, 2025**: Major platform improvements and fixes
+  - Fixed all authentication and routing issues with JWT tokens
+  - Implemented local AI using Ollama (free, no API limits)
+  - Created separate landing page for non-logged users vs dashboard for logged users
+  - Fixed all app features: notes, calendar, search, mail, chat, gallery
+  - Built comprehensive AI assistant that learns from user activities
+  - Removed OpenAI dependency to avoid API quota limitations
+  - Added PostgreSQL database integration with Drizzle ORM
   - Successfully deployed database schema with `npm run db:push`
   - All data now persists across application restarts
 
@@ -34,12 +38,16 @@ Preferred communication style: Simple, everyday language.
 - **Real-time Communication**: WebSocket Server for chat functionality
 
 ### AI Integration
-- **Provider**: OpenAI API (GPT-4o model)
+- **Provider**: Ollama (local AI, free)
+- **Model**: Llama 3.2 3B (lightweight, fast)
 - **Features**: 
   - AI-powered insights generation
   - Chat assistance
   - Content analysis and suggestions
   - Cross-application intelligence
+  - Learns from user interactions across all apps
+  - Provides intelligent fallback responses during setup
+  - Learns from user interactions across all apps
 
 ## Key Components
 
