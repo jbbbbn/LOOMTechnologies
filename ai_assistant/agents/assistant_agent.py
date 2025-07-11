@@ -32,13 +32,20 @@ class AssistantAgent:
     def _initialize_ollama(self):
         """Initialize Ollama LLM"""
         try:
-            self.ollama_llm = Ollama(
-                model="llama3.2:3b",
-                base_url="http://localhost:11434"
-            )
-            print("✅ Ollama initialized successfully")
+            # Try to initialize Ollama with timeout
+            import requests
+            test_response = requests.get("http://localhost:11434/api/tags", timeout=5)
+            if test_response.status_code == 200:
+                self.ollama_llm = Ollama(
+                    model="llama3.2:3b",
+                    base_url="http://localhost:11434"
+                )
+                print("✅ Ollama initialized successfully")
+            else:
+                raise Exception("Ollama server not responding")
         except Exception as e:
             print(f"❌ Ollama initialization failed: {e}")
+            print("⚠️  Using simplified response system")
             self.ollama_llm = None
     
     def _initialize_tools(self):

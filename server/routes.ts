@@ -738,43 +738,29 @@ Focus on providing detailed, personalized responses using the user's actual data
         console.log('User preferences for entertainment question:', JSON.stringify(userContext.preferences, null, 2));
       }
 
-      // TRY PYTHON AI SERVICE FIRST
-      console.log('🚀 Using Python AI Assistant Service');
+      // USE ONLY PYTHON AI SERVICE - NO FALLBACKS
+      console.log('🚀 Using Python AI Assistant Service (LangChain + Ollama + ChromaDB)');
       
-      let aiResponse;
-      try {
-        const response = await fetch('http://localhost:8001/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message,
-            user_id: userId,
-            user_context: userContext
-          })
-        });
-
-        if (response.ok) {
-          aiResponse = await response.json();
-          console.log('✅ PYTHON AI SERVICE USED:', aiResponse.tools_used);
-        } else {
-          throw new Error(`Python AI service responded with status: ${response.status}`);
-        }
-      } catch (fetchError) {
-        console.log('❌ Python AI service unavailable, using fallback');
-        
-        // Fallback to vector orchestrator
-        const { vectorOrchestrator } = await import('./vectorService');
-        aiResponse = await vectorOrchestrator.orchestrateTask(
+      const response = await fetch('http://localhost:8001/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           message,
-          userId,
-          userContext
-        );
-        console.log('✅ VECTOR ORCHESTRATOR FALLBACK USED:', aiResponse.tools_used);
+          user_id: userId,
+          user_context: userContext
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Python AI service unavailable. Status: ${response.status}`);
       }
+
+      const aiResponse = await response.json();
+      console.log('✅ PYTHON AI SERVICE USED:', aiResponse.tools_used);
       
-      let response = aiResponse.response;
+      let aiResponseText = aiResponse.response;
       
       // Add information about tools used
       if (aiResponse.tools_used.length > 0) {
@@ -789,7 +775,7 @@ Focus on providing detailed, personalized responses using the user's actual data
             const webInfo = searchResults.results.slice(0, 3).map(r => 
               `${r.title}: ${r.snippet}`
             ).join('\n');
-            response += `\n\nHere's some additional information from the web:\n${webInfo}`;
+            aiResponseText += `\n\nHere's some additional information from the web:\n${webInfo}`;
           }
         } catch (error) {
           console.log('Web search failed, using local data only');
@@ -801,13 +787,13 @@ Focus on providing detailed, personalized responses using the user's actual data
         userId,
         appType: "chat",
         dataType: "chat_message",
-        data: { message, response, timestamp: new Date().toISOString() }
+        data: { message, response: aiResponseText, timestamp: new Date().toISOString() }
       });
 
       // Extract user preferences from the conversation
       await extractUserPreferences(message, userId);
 
-      res.json({ response });
+      res.json({ response: aiResponseText });
     } catch (error) {
       console.error("AI chat error:", error);
       res.status(500).json({ error: "AI chat failed" });
