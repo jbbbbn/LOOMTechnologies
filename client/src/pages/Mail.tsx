@@ -56,7 +56,7 @@ export default function Mail() {
       subject: subject.trim(),
       recipient: recipient.trim(),
       content: content.trim(),
-      sender: "demo@loom.com",
+      sender: "user@loom.com",
     };
 
     createEmailMutation.mutate(emailData);

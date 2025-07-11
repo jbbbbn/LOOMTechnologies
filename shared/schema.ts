@@ -29,6 +29,12 @@ export const events = pgTable("events", {
   startTime: timestamp("start_time", { mode: 'string' }).notNull(),
   endTime: timestamp("end_time", { mode: 'string' }).notNull(),
   location: text("location"),
+  isRecurring: boolean("is_recurring").default(false),
+  recurringType: text("recurring_type"), // 'daily', 'weekly', 'monthly'
+  recurringDays: text("recurring_days").array(), // ['monday', 'tuesday', etc.]
+  recurringEndDate: timestamp("recurring_end_date", { mode: 'string' }),
+  category: text("category"), // 'gym', 'work', 'school', 'diet', 'personal'
+  reminder: integer("reminder"), // minutes before event
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -48,6 +54,10 @@ export const emails = pgTable("emails", {
   sender: text("sender"),
   recipient: text("recipient"),
   isRead: boolean("is_read").default(false),
+  isDraft: boolean("is_draft").default(false),
+  isStarred: boolean("is_starred").default(false),
+  folder: text("folder").default('inbox'), // 'inbox', 'sent', 'drafts', 'trash', 'archive'
+  attachments: jsonb("attachments"), // array of attachment objects
   createdAt: timestamp("created_at").defaultNow(),
 });
 

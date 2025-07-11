@@ -121,6 +121,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Helper function to generate recurring events
+  function generateRecurringEvents(baseEvent: any): any[] {
+    const events: any[] = [];
+    const startDate = new Date(baseEvent.startTime);
+    const endDate = new Date(baseEvent.endTime);
+    const recurringEndDate = baseEvent.recurringEndDate ? new Date(baseEvent.recurringEndDate) : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000); // 90 days default
+    
+    let currentDate = new Date(startDate);
+    let iteration = 0;
+    const maxIterations = 50; // Prevent infinite loops
+    
+    while (currentDate <= recurringEndDate && iteration < maxIterations) {
+      if (baseEvent.recurringType === 'daily') {
+        currentDate.setDate(currentDate.getDate() + 1);
+      } else if (baseEvent.recurringType === 'weekly') {
+        currentDate.setDate(currentDate.getDate() + 7);
+      } else if (baseEvent.recurringType === 'monthly') {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+      
+      if (currentDate <= recurringEndDate) {
+        const eventDuration = endDate.getTime() - startDate.getTime();
+        const newEndTime = new Date(currentDate.getTime() + eventDuration);
+        
+        events.push({
+          title: baseEvent.title,
+          description: baseEvent.description,
+          startTime: currentDate.toISOString(),
+          endTime: newEndTime.toISOString(),
+          location: baseEvent.location,
+          category: baseEvent.category,
+          isRecurring: false, // Don't make the generated events recurring
+          reminder: baseEvent.reminder,
+        });
+      }
+      
+      iteration++;
+    }
+    
+    return events;
+  }
+
+  // Helper function to generate reminder text
+  function generateReminderText(event: any): string {
+    const now = new Date();
+    const eventStart = new Date(event.startTime);
+    const timeDiff = eventStart.getTime() - now.getTime();
+    const hoursUntil = Math.round(timeDiff / (1000 * 60 * 60));
+    const minutesUntil = Math.round(timeDiff / (1000 * 60));
+    
+    if (timeDiff < 0) {
+      return "Event has passed";
+    } else if (minutesUntil <= 60) {
+      return `Reminder: ${event.title} in ${minutesUntil} minutes`;
+    } else if (hoursUntil <= 24) {
+      return `Reminder: ${event.title} in ${hoursUntil} hours`;
+    } else {
+      const daysUntil = Math.round(hoursUntil / 24);
+      return `Reminder: ${event.title} in ${daysUntil} days`;
+    }
+  }
+
   // Notes API
   app.get("/api/notes", authenticateToken, async (req, res) => {
     try {
@@ -196,7 +258,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/events", authenticateToken, async (req, res) => {
     try {
       const events = await storage.getEventsByUserId((req as any).user.userId);
-      res.json(events);
+      
+      // Add reminder information to events
+      const eventsWithReminders = events.map(event => ({
+        ...event,
+        reminderText: generateReminderText(event)
+      }));
+      
+      res.json(eventsWithReminders);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch events" });
     }
@@ -211,11 +280,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const event = await storage.createEvent(validatedData);
       
+      // Generate recurring events if specified
+      if (validatedData.isRecurring && validatedData.recurringType) {
+        const recurringEvents = generateRecurringEvents(validatedData);
+        for (const recurringEvent of recurringEvents) {
+          await storage.createEvent({
+            ...recurringEvent,
+            userId: (req as any).user.userId
+          });
+        }
+      }
+      
       await storage.createAILearning({
         userId: (req as any).user.userId,
         appType: "calendar",
         dataType: "event_created",
-        data: { title: event.title, startTime: event.startTime, endTime: event.endTime }
+        data: { 
+          title: event.title, 
+          startTime: event.startTime, 
+          endTime: event.endTime,
+          category: event.category,
+          isRecurring: event.isRecurring 
+        }
       });
       
       res.json(event);
@@ -322,6 +408,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const email = await storage.createEmail(validatedData);
+      
+      // Try to send actual email if SendGrid is configured
+      if (process.env.SENDGRID_API_KEY && validatedData.recipient.includes('@')) {
+        try {
+          const sgMail = require('@sendgrid/mail');
+          sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+          
+          const msg = {
+            to: validatedData.recipient,
+            from: 'noreply@loom.com', // Use your verified sender
+            subject: validatedData.subject,
+            text: validatedData.content,
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #ff6b35;">Message from LOOM</h2>
+              <p>${validatedData.content.replace(/\n/g, '<br>')}</p>
+              <hr style="border: 1px solid #eee; margin: 20px 0;">
+              <p style="color: #666; font-size: 12px;">Sent via LOOM Consciousness Upload Platform</p>
+            </div>`,
+          };
+          
+          await sgMail.send(msg);
+          console.log('Email sent successfully via SendGrid');
+        } catch (sendError) {
+          console.log('Email stored but not sent (SendGrid not configured):', sendError.message);
+        }
+      }
       
       await storage.createAILearning({
         userId: (req as any).user.userId,

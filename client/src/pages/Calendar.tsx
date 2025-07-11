@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar as CalendarIcon, Plus, Clock, MapPin, Edit, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar as CalendarIcon, Plus, Clock, MapPin, Edit, Trash2, Repeat, Bell, Dumbbell, GraduationCap, Briefcase, Apple } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Event } from "@shared/schema";
@@ -20,6 +22,12 @@ export default function Calendar() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [location, setLocation] = useState("");
+  const [category, setCategory] = useState<string>("personal");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringType, setRecurringType] = useState<string>("daily");
+  const [recurringDays, setRecurringDays] = useState<string[]>([]);
+  const [recurringEndDate, setRecurringEndDate] = useState("");
+  const [reminder, setReminder] = useState<number>(15);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -28,7 +36,19 @@ export default function Calendar() {
   });
 
   const createEventMutation = useMutation({
-    mutationFn: async (eventData: { title: string; description?: string; startTime: string; endTime: string; location?: string }) => {
+    mutationFn: async (eventData: { 
+      title: string; 
+      description?: string; 
+      startTime: string; 
+      endTime: string; 
+      location?: string;
+      category?: string;
+      isRecurring?: boolean;
+      recurringType?: string;
+      recurringDays?: string[];
+      recurringEndDate?: string;
+      reminder?: number;
+    }) => {
       const response = await apiRequest("POST", "/api/events", eventData);
       return response.json();
     },
@@ -49,6 +69,12 @@ export default function Calendar() {
     setStartTime("");
     setEndTime("");
     setLocation("");
+    setCategory("personal");
+    setIsRecurring(false);
+    setRecurringType("daily");
+    setRecurringDays([]);
+    setRecurringEndDate("");
+    setReminder(15);
     setSelectedEvent(null);
   };
 
@@ -62,6 +88,12 @@ export default function Calendar() {
       startTime,
       endTime,
       location: location.trim() || undefined,
+      category,
+      isRecurring,
+      recurringType: isRecurring ? recurringType : undefined,
+      recurringDays: isRecurring ? recurringDays : undefined,
+      recurringEndDate: isRecurring && recurringEndDate ? recurringEndDate : undefined,
+      reminder,
     };
 
     createEventMutation.mutate(eventData);
@@ -81,6 +113,26 @@ export default function Calendar() {
       .filter(event => new Date(event.startTime) > now)
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
       .slice(0, 5);
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'gym': return <Dumbbell className="w-4 h-4" />;
+      case 'work': return <Briefcase className="w-4 h-4" />;
+      case 'school': return <GraduationCap className="w-4 h-4" />;
+      case 'diet': return <Apple className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'gym': return 'bg-green-100 text-green-800';
+      case 'work': return 'bg-blue-100 text-blue-800';
+      case 'school': return 'bg-purple-100 text-purple-800';
+      case 'diet': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   const formatTime = (dateTime: string) => {
@@ -156,6 +208,133 @@ export default function Calendar() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
               />
+              
+              {/* Category Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Category</label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gym">
+                      <div className="flex items-center">
+                        <Dumbbell className="w-4 h-4 mr-2" />
+                        Gym & Fitness
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="work">
+                      <div className="flex items-center">
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        Work
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="school">
+                      <div className="flex items-center">
+                        <GraduationCap className="w-4 h-4 mr-2" />
+                        School
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="diet">
+                      <div className="flex items-center">
+                        <Apple className="w-4 h-4 mr-2" />
+                        Diet & Nutrition
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="personal">Personal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Recurring Event Options */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="recurring"
+                    checked={isRecurring}
+                    onCheckedChange={setIsRecurring}
+                  />
+                  <label htmlFor="recurring" className="text-sm font-medium flex items-center">
+                    <Repeat className="w-4 h-4 mr-2" />
+                    Recurring Event
+                  </label>
+                </div>
+                
+                {isRecurring && (
+                  <div className="space-y-3 border-l-2 border-[var(--loom-orange)] pl-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Repeat</label>
+                      <Select value={recurringType} onValueChange={setRecurringType}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {recurringType === "weekly" && (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Repeat on</label>
+                        <div className="grid grid-cols-7 gap-2">
+                          {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                            <div key={day} className="flex items-center space-x-1">
+                              <Checkbox
+                                id={day}
+                                checked={recurringDays.includes(day.toLowerCase())}
+                                onCheckedChange={(checked) => {
+                                  const dayLower = day.toLowerCase();
+                                  if (checked) {
+                                    setRecurringDays([...recurringDays, dayLower]);
+                                  } else {
+                                    setRecurringDays(recurringDays.filter(d => d !== dayLower));
+                                  }
+                                }}
+                              />
+                              <label htmlFor={day} className="text-xs">{day}</label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">End Date (optional)</label>
+                      <Input
+                        type="date"
+                        value={recurringEndDate}
+                        onChange={(e) => setRecurringEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Reminder */}
+              <div>
+                <label className="block text-sm font-medium mb-2 flex items-center">
+                  <Bell className="w-4 h-4 mr-2" />
+                  Reminder
+                </label>
+                <Select value={reminder.toString()} onValueChange={(value) => setReminder(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">No reminder</SelectItem>
+                    <SelectItem value="5">5 minutes before</SelectItem>
+                    <SelectItem value="15">15 minutes before</SelectItem>
+                    <SelectItem value="30">30 minutes before</SelectItem>
+                    <SelectItem value="60">1 hour before</SelectItem>
+                    <SelectItem value="180">3 hours before</SelectItem>
+                    <SelectItem value="1440">1 day before</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel

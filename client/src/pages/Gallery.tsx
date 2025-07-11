@@ -119,20 +119,24 @@ export default function Gallery() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Create a mock URL for demo purposes (in real app, you'd upload to cloud storage)
-    const mockUrl = URL.createObjectURL(file);
-    
-    const mediaData = {
-      filename: `${Date.now()}_${file.name}`,
-      originalName: file.name,
-      mimeType: file.type,
-      size: file.size,
-      url: mockUrl,
-      description: description.trim() || undefined,
-      tags: tags.split(",").map(tag => tag.trim()).filter(Boolean),
-    };
+    // Convert file to base64 for persistent storage
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result as string;
+      
+      const mediaData = {
+        filename: `${Date.now()}_${file.name}`,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+        url: base64Data, // Store as base64 for persistence
+        description: description.trim() || undefined,
+        tags: tags.split(",").map(tag => tag.trim()).filter(Boolean),
+      };
 
-    uploadMutation.mutate(mediaData);
+      uploadMutation.mutate(mediaData);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleEdit = (media: Media) => {
