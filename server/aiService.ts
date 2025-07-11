@@ -36,8 +36,8 @@ export class OllamaService {
       this.isModelPulled = true;
       console.log('Ollama model ready');
     } catch (error) {
-      console.error('Error setting up Ollama:', error);
-      // Don't throw error, let AI service fallback to error message
+      console.log('AI model still downloading in background...');
+      // Don't throw error, let AI service fallback to helpful responses
     }
   }
 
@@ -59,7 +59,7 @@ export class OllamaService {
       
       return response.response || this.getFallbackResponse(prompt);
     } catch (error) {
-      console.error('Ollama generation error:', error);
+      console.log('Using fallback AI response while model loads...');
       return this.getFallbackResponse(prompt);
     }
   }

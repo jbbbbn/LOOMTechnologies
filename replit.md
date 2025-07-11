@@ -47,7 +47,6 @@ Preferred communication style: Simple, everyday language.
   - Cross-application intelligence
   - Learns from user interactions across all apps
   - Provides intelligent fallback responses during setup
-  - Learns from user interactions across all apps
 
 ## Key Components
 
