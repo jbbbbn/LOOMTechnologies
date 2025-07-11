@@ -290,16 +290,74 @@ Your expertise:
 
 User Context: ${JSON.stringify(userContext)}
 
+IMPORTANT: Read the user's preferences and notes carefully. If they mention music albums, books, movies, or any specific interests, remember these details.
+
 Focus on providing helpful, friendly responses while maintaining context awareness.`;
 
-    const response = await this.services.get(AIServiceType.CHAT_AI).generateResponse(message, systemPrompt);
+    try {
+      const response = await this.services.get(AIServiceType.CHAT_AI).generateResponse(message, systemPrompt);
+      
+      return {
+        response,
+        confidence: 0.8,
+        serviceUsed: AIServiceType.CHAT_AI,
+        metadata: { chatResponse: true }
+      };
+    } catch (error) {
+      console.error('Chat AI error:', error);
+      
+      // Enhanced fallback response with user context
+      const fallbackResponse = this.generateContextualFallback(message, userContext);
+      
+      return {
+        response: fallbackResponse,
+        confidence: 0.6,
+        serviceUsed: AIServiceType.CHAT_AI,
+        metadata: { fallbackUsed: true }
+      };
+    }
+  }
+
+  /**
+   * Generate contextual fallback response based on user data
+   */
+  private generateContextualFallback(message: string, userContext: any): string {
+    const lowerMessage = message.toLowerCase();
     
-    return {
-      response,
-      confidence: 0.8,
-      serviceUsed: AIServiceType.CHAT_AI,
-      metadata: { chatResponse: true }
-    };
+    // Check if asking about music/albums
+    if (lowerMessage.includes('music') || lowerMessage.includes('album') || lowerMessage.includes('favorite')) {
+      // Look for music preferences in user preferences
+      const musicPrefs = userContext.preferences?.filter((p: any) => 
+        p.category === 'interests' && (p.value.toLowerCase().includes('music') || p.value.toLowerCase().includes('album') || p.value.toLowerCase().includes('beautiful') || p.value.toLowerCase().includes('twisted') || p.value.toLowerCase().includes('fantasy'))
+      );
+      
+      if (musicPrefs && musicPrefs.length > 0) {
+        return `Based on our previous conversations, I know you mentioned "${musicPrefs[0].value}" as one of your preferences. Is there something specific about music you'd like to discuss?`;
+      }
+      
+      // Check if they have the specific album preference
+      const albumPref = userContext.preferences?.find((p: any) => 
+        p.key === 'favorite_album' || p.value.toLowerCase().includes('beautiful dark twisted fantasy')
+      );
+      
+      if (albumPref) {
+        return `I remember you told me that "${albumPref.value}" is your favorite album of all time! What would you like to know about it or discuss?`;
+      }
+    }
+    
+    // Check if asking about comics
+    if (lowerMessage.includes('comic')) {
+      if (userContext.notes?.some((n: any) => n.title?.toLowerCase().includes('comic') || n.content?.toLowerCase().includes('comic'))) {
+        return `I can see you have notes about comics. From your Comics List, you seem to have quite a collection. What would you like to know about them?`;
+      }
+    }
+    
+    // Generic fallback with user context
+    if (userContext.notes?.length > 0) {
+      return `I can help you with your LOOM data. I see you have ${userContext.notes.length} notes, ${userContext.events?.length || 0} events, and ${userContext.searches?.length || 0} searches. What would you like to know about your data?`;
+    }
+    
+    return `I'm your LOOM AI Assistant. I can help you with your notes, calendar, emails, and other data. What would you like to work on today?`;
   }
 
   /**

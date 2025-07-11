@@ -750,6 +750,17 @@ Focus on providing detailed, personalized responses using the user's actual data
         }
       }
       
+      // Save AI learning data and extract preferences
+      await storage.createAILearning({
+        userId,
+        appType: "chat",
+        dataType: "chat_message",
+        data: { message, response, timestamp: new Date().toISOString() }
+      });
+
+      // Extract user preferences from the conversation
+      await extractUserPreferences(message, userId);
+
       res.json({ response });
     } catch (error) {
       console.error("AI chat error:", error);
@@ -980,7 +991,15 @@ Focus on providing detailed, personalized responses using the user's actual data
       { pattern: /i enjoy (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => match.replace(/i enjoy /, '') },
       { pattern: /i prefer (.*?)(?:\.|$|,)/, category: "preferences", extract: (match: string) => match.replace(/i prefer /, '') },
       { pattern: /i hate (.*?)(?:\.|$|,)/, category: "dislikes", extract: (match: string) => match.replace(/i hate /, '') },
-      { pattern: /i don't like (.*?)(?:\.|$|,)/, category: "dislikes", extract: (match: string) => match.replace(/i don't like /, '') }
+      { pattern: /i don't like (.*?)(?:\.|$|,)/, category: "dislikes", extract: (match: string) => match.replace(/i don't like /, '') },
+      { pattern: /my favorite (.*?) is (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => {
+        const parts = match.match(/my favorite (.*?) is (.*?)(?:\.|$|,)/);
+        return parts ? `${parts[1]}: ${parts[2]}` : match;
+      }},
+      { pattern: /(.*?) is my favorite (.*?)(?:\.|$|,)/, category: "interests", extract: (match: string) => {
+        const parts = match.match(/(.*?) is my favorite (.*?)(?:\.|$|,)/);
+        return parts ? `${parts[2]}: ${parts[1]}` : match;
+      }}
     ];
 
     for (const { pattern, category, extract } of patterns) {
