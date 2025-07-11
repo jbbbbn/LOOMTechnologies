@@ -91,7 +91,15 @@ export class OllamaService {
       return 'Hello! Welcome to LOOM. I\'m your AI assistant that learns from your activities across all apps. How can I help you today?';
     }
     
-    return 'I\'m your LOOM AI assistant, currently setting up my full capabilities. I can help you with notes, calendar, search, email, and media management. The AI system is downloading - full functionality will be available shortly. Feel free to explore the platform features!';
+    if (lowerPrompt.includes('create') || lowerPrompt.includes('add')) {
+      return 'I can help you create content across all LOOM apps. Use the Notes app to write, Calendar to schedule events, or Gallery to upload media. I\'ll learn from your patterns to provide better suggestions.';
+    }
+    
+    if (lowerPrompt.includes('organize') || lowerPrompt.includes('manage')) {
+      return 'I can help you organize your digital life. I track your usage patterns across notes, calendar, searches, emails, and media to provide personalized organization suggestions.';
+    }
+    
+    return 'I\'m your LOOM AI assistant! I can help with notes, calendar events, searches, emails, and media management. The full AI model is still downloading, but I\'m ready to assist you with the platform features. Try asking me about creating content or organizing your data!';
   }
 
   async generateInsights(learningData: any[], appType: string): Promise<string> {

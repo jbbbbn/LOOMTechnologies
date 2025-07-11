@@ -220,7 +220,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(event);
     } catch (error) {
+      console.error("Event creation error:", error);
       res.status(400).json({ error: "Invalid event data" });
+    }
+  });
+
+  app.put("/api/events/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const event = await storage.updateEvent(id, updates);
+      
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      await storage.createAILearning({
+        userId: (req as any).user.userId,
+        appType: "calendar",
+        dataType: "event_updated",
+        data: { id, updates }
+      });
+      
+      res.json(event);
+    } catch (error) {
+      console.error("Event update error:", error);
+      res.status(400).json({ error: "Failed to update event" });
+    }
+  });
+
+  app.delete("/api/events/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteEvent(id);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Event deletion error:", error);
+      res.status(500).json({ error: "Failed to delete event" });
     }
   });
 
@@ -334,7 +375,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(media);
     } catch (error) {
+      console.error("Media creation error:", error);
       res.status(400).json({ error: "Invalid media data" });
+    }
+  });
+
+  app.put("/api/media/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const media = await storage.updateMedia(id, updates);
+      
+      if (!media) {
+        return res.status(404).json({ error: "Media not found" });
+      }
+      
+      await storage.createAILearning({
+        userId: (req as any).user.userId,
+        appType: "gallery",
+        dataType: "media_updated",
+        data: { id, updates }
+      });
+      
+      res.json(media);
+    } catch (error) {
+      console.error("Media update error:", error);
+      res.status(400).json({ error: "Failed to update media" });
+    }
+  });
+
+  app.delete("/api/media/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteMedia(id);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Media not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Media deletion error:", error);
+      res.status(500).json({ error: "Failed to delete media" });
     }
   });
 

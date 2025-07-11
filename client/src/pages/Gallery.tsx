@@ -80,7 +80,7 @@ export default function Gallery() {
       queryClient.invalidateQueries({ queryKey: ["/api/media"] });
       toast({ title: "Media updated successfully!" });
       setIsEditOpen(false);
-      resetEditForm();
+      setSelectedMedia(null);
     },
     onError: () => {
       toast({ title: "Failed to update media", variant: "destructive" });
@@ -89,7 +89,8 @@ export default function Gallery() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/media/${id}`);
+      const response = await apiRequest("DELETE", `/api/media/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/media"] });
