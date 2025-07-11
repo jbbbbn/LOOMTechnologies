@@ -21,14 +21,14 @@ export function Navigation() {
   const { logout, user } = useAuth();
 
   const navItems = [
-    { path: "/", label: "Home", icon: Home },
+    { path: "/", label: "Dashboard", icon: Home },
+    { path: "/ai", label: "AI Assistant", icon: Bot },
     { path: "/notes", label: "Notes", icon: StickyNote },
     { path: "/calendar", label: "Calendar", icon: Calendar },
     { path: "/search", label: "Search", icon: Search },
     { path: "/mail", label: "Mail", icon: Mail },
     { path: "/chat", label: "Chat", icon: MessageCircle },
     { path: "/gallery", label: "Gallery", icon: Images },
-    { path: "/ai", label: "AI Assistant", icon: Bot },
   ];
 
   return (

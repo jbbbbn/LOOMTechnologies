@@ -104,14 +104,6 @@ export default function Home() {
       path: "/gallery",
       color: "bg-pink-500",
       description: "AI-enhanced media organization"
-    },
-    {
-      name: "AI Assistant",
-      icon: Bot,
-      count: 0,
-      path: "/ai",
-      color: "bg-orange-500",
-      description: "Your personal AI companion"
     }
   ];
 
@@ -168,7 +160,7 @@ export default function Home() {
       </Card>
 
       {/* Apps Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {apps.map((app) => {
           const Icon = app.icon;
           return (
@@ -204,7 +196,7 @@ export default function Home() {
             Quick Actions
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
             <Link href="/notes">
               <StickyNote className="h-6 w-6" />
@@ -227,9 +219,9 @@ export default function Home() {
           </Button>
           
           <Button asChild variant="outline" className="h-auto p-4 flex-col space-y-2">
-            <Link href="/ai">
-              <Bot className="h-6 w-6" />
-              <span className="font-medium">Ask AI</span>
+            <Link href="/gallery">
+              <Images className="h-6 w-6" />
+              <span className="font-medium">Upload Media</span>
             </Link>
           </Button>
         </CardContent>
