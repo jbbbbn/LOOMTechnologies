@@ -434,14 +434,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/chat", authenticateToken, async (req, res) => {
     try {
       const { message } = req.body;
-      const learningData = await storage.getAILearningByUserId((req as any).user.userId);
+      const userId = (req as any).user.userId;
       
-      const systemPrompt = `You are a personal AI assistant for the LOOM platform. You have access to the user's data across all applications (Notes, Calendar, Search, Mail, Chat, Gallery). Use this context to provide helpful responses. Here's what you know about the user: ${JSON.stringify(learningData.slice(-10))}`;
+      // Get user's actual data for context
+      const [notes, events, searches, emails, media, learningData] = await Promise.all([
+        storage.getNotesByUserId(userId),
+        storage.getEventsByUserId(userId),
+        storage.getSearchesByUserId(userId),
+        storage.getEmailsByUserId(userId),
+        storage.getMediaByUserId(userId),
+        storage.getAILearningByUserId(userId)
+      ]);
+
+      // Create rich context about user
+      const userContext = {
+        notes: notes.map(n => ({ title: n.title, content: n.content.slice(0, 200) })),
+        events: events.map(e => ({ title: e.title, description: e.description })),
+        searches: searches.slice(-5).map(s => ({ query: s.query })),
+        emails: emails.slice(-5).map(e => ({ subject: e.subject })),
+        media: media.slice(-5).map(m => ({ filename: m.originalName, description: m.description })),
+        activities: learningData.slice(-10).map(l => ({ type: l.dataType, app: l.appType }))
+      };
+      
+      const systemPrompt = `You are a personal AI assistant for the LOOM platform. You analyze the user's actual data to provide personalized responses. 
+
+User's Data Context:
+- Notes: ${JSON.stringify(userContext.notes)}
+- Events: ${JSON.stringify(userContext.events)}  
+- Recent Searches: ${JSON.stringify(userContext.searches)}
+- Recent Emails: ${JSON.stringify(userContext.emails)}
+- Media: ${JSON.stringify(userContext.media)}
+- Activities: ${JSON.stringify(userContext.activities)}
+
+Based on this real data, answer questions about the user's interests, habits, and preferences. Be specific and reference their actual content when relevant.`;
       
       const response = await aiService.generateResponse(message, systemPrompt);
       
       res.json({ response });
     } catch (error) {
+      console.error("AI chat error:", error);
       res.status(500).json({ error: "AI chat failed" });
     }
   });

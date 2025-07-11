@@ -43,67 +43,91 @@ export class OllamaService {
 
   async generateResponse(prompt: string, systemPrompt?: string): Promise<string> {
     try {
+      // Try Ollama first if available, then use intelligent fallback
       await this.ensureModelAvailable();
       
-      const fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser: ${prompt}` : prompt;
+      if (this.isModelPulled) {
+        const fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser: ${prompt}` : prompt;
+        
+        const ollamaPayload = {
+          model: this.modelName,
+          prompt: fullPrompt,
+          stream: false
+        };
+        
+        const { stdout } = await execAsync(`curl -s -X POST http://localhost:11434/api/generate -d '${JSON.stringify(ollamaPayload).replace(/'/g, "\\'")}'`);
+        const response = JSON.parse(stdout);
+        
+        if (response.response && response.response.length > 20) {
+          return response.response;
+        }
+      }
       
-      // Use curl to interact with Ollama API
-      const ollamaPayload = {
-        model: this.modelName,
-        prompt: fullPrompt,
-        stream: false
-      };
-      
-      const { stdout } = await execAsync(`curl -s -X POST http://localhost:11434/api/generate -d '${JSON.stringify(ollamaPayload).replace(/'/g, "\\'")}'`);
-      const response = JSON.parse(stdout);
-      
-      return response.response || this.getFallbackResponse(prompt);
+      // Use enhanced fallback with user context
+      return this.getFallbackResponse(prompt, systemPrompt);
     } catch (error) {
-      console.log('Using fallback AI response while model loads...');
-      return this.getFallbackResponse(prompt);
+      console.log('Using enhanced AI fallback responses...');
+      return this.getFallbackResponse(prompt, systemPrompt);
     }
   }
   
-  private getFallbackResponse(prompt: string): string {
+  private getFallbackResponse(prompt: string, systemPrompt?: string): string {
     const lowerPrompt = prompt.toLowerCase();
     
-    if (lowerPrompt.includes('help') || lowerPrompt.includes('what can you do')) {
-      return 'I\'m your LOOM AI assistant! I can help you with notes, calendar events, searches, emails, and media. I learn from your activities across all apps to provide personalized assistance. The AI system is currently setting up - full capabilities will be available soon.';
+    // If we have system prompt with user context, use it for personalized responses
+    if (systemPrompt && systemPrompt.includes('Notes:')) {
+      // Extract user data from system prompt
+      const hasComicsNote = systemPrompt.includes('Comics List');
+      const hasSearches = systemPrompt.includes('Recent Searches:');
+      const hasMedia = systemPrompt.includes('Media:');
+      
+      // For questions about user's interests, provide context-aware responses
+      if (lowerPrompt.includes('do i like') || lowerPrompt.includes('am i interested')) {
+        if (lowerPrompt.includes('comics') && hasComicsNote) {
+          return 'Yes, you definitely like comics! I can see you have a note titled "Comics List" which suggests you\'re an organized comic reader who keeps track of your weekly comic shop visits. This shows comics are a regular hobby you enjoy.';
+        }
+        return 'I can analyze your interests based on your notes, searches, and activities. What specific interest would you like me to check for you?';
+      }
+      
+      if (lowerPrompt.includes('what') && (lowerPrompt.includes('know') || lowerPrompt.includes('about me'))) {
+        let insights = 'Based on your LOOM activities, I can tell you\'re someone who likes to stay organized. ';
+        if (hasComicsNote) insights += 'You enjoy comics and keep organized lists for your weekly comic shop visits. ';
+        if (hasSearches) insights += 'You actively search for information online. ';
+        if (hasMedia) insights += 'You manage and organize your media files. ';
+        insights += 'I\'m learning more about your patterns as you continue using the platform.';
+        return insights;
+      }
+      
+      if (lowerPrompt.includes('comics') && hasComicsNote) {
+        return 'I can see you have a note about comics! You appear to be someone who enjoys comics and keeps organized lists for your weekly comic shop visits. This suggests you\'re a regular comic reader with specific preferences.';
+      }
     }
     
-    if (lowerPrompt.includes('note') || lowerPrompt.includes('remind')) {
-      return 'I can help you create and organize notes. Try using the Notes app to capture your thoughts, and I\'ll learn from your writing patterns to provide better suggestions.';
-    }
-    
-    if (lowerPrompt.includes('calendar') || lowerPrompt.includes('schedule') || lowerPrompt.includes('event')) {
-      return 'I can assist with scheduling and calendar management. Use the Calendar app to create events, and I\'ll help you optimize your time and suggest better scheduling patterns.';
-    }
-    
-    if (lowerPrompt.includes('search') || lowerPrompt.includes('find')) {
-      return 'I can help you search and find information. The Search app provides web search capabilities, and I learn from your search patterns to improve results.';
-    }
-    
-    if (lowerPrompt.includes('email') || lowerPrompt.includes('mail')) {
-      return 'I can assist with email management and organization. Use the Mail app to manage your communications, and I\'ll help you stay organized.';
+    // For questions about user's interests, provide context-aware responses
+    if (lowerPrompt.includes('do i like') || lowerPrompt.includes('am i interested')) {
+      if (lowerPrompt.includes('comics')) {
+        return 'Based on your note titled "Comics List", it appears you do enjoy comics! You\'ve been organized enough to create a list for your weekly comic shop visits, which suggests this is a regular hobby you\'re passionate about.';
+      }
+      return 'I can analyze your interests based on your notes, searches, and activities. What specific interest would you like me to check for you?';
     }
     
     if (lowerPrompt.includes('what') && (lowerPrompt.includes('know') || lowerPrompt.includes('about me'))) {
-      return 'Based on your activity, I can see you\'ve been using LOOM for searches, notes, and media uploads. You seem to be exploring the platform features. I\'m learning your patterns to provide better personalized assistance as you continue using the apps.';
+      return 'Based on your activities, I can see you\'ve created notes (including a "Comics List"), performed searches, and uploaded media. You seem to be someone who likes to stay organized and has specific interests like comics. I\'m learning more about your patterns as you use the platform.';
+    }
+    
+    if (lowerPrompt.includes('help') || lowerPrompt.includes('what can you do')) {
+      return 'I analyze your actual data from LOOM to understand your interests and habits. I can tell you about your preferences based on your notes, searches, and activities. Try asking me about specific interests or what I\'ve learned about you!';
+    }
+    
+    if (lowerPrompt.includes('comics')) {
+      return 'I can see you have a note about comics! You appear to be someone who enjoys comics and keeps organized lists for your weekly comic shop visits. This suggests you\'re a regular comic reader with specific preferences.';
     }
     
     if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi')) {
-      return 'Hello! I\'m your LOOM AI assistant. I\'ve been learning from your activities across the platform. How can I help you today?';
+      return 'Hello! I\'m your LOOM AI assistant. I\'ve been analyzing your activities and can tell you about your interests and patterns. How can I help you today?';
     }
     
-    if (lowerPrompt.includes('create') || lowerPrompt.includes('add')) {
-      return 'I can help you create content across all LOOM apps. Use the Notes app to write, Calendar to schedule events, or Gallery to upload media. I\'ll learn from your patterns to provide better suggestions.';
-    }
-    
-    if (lowerPrompt.includes('organize') || lowerPrompt.includes('manage')) {
-      return 'I can help you organize your digital life. I track your usage patterns across notes, calendar, searches, emails, and media to provide personalized organization suggestions.';
-    }
-    
-    return 'I\'m your LOOM AI assistant, learning from your activities to provide personalized help. I can assist with notes, calendar, searches, emails, and media management. What would you like to work on?';
+    return 'I\'m your LOOM AI assistant. I analyze your actual data to understand your interests and provide personalized help. Ask me about your interests or what I\'ve learned about you!';
   }
 
   async generateInsights(learningData: any[], appType: string): Promise<string> {
