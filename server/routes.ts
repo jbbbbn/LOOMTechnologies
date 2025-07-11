@@ -9,7 +9,6 @@ import { insertNoteSchema, insertEventSchema, insertSearchSchema, insertEmailSch
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
-import { performWebSearch } from "./searchService";
 import type { Request, Response, NextFunction } from "express";
 
 // JWT secret - in production, use environment variable
