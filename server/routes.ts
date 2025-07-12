@@ -24,6 +24,12 @@ const loginSchema = z.object({
   password: z.string().min(6),
 });
 
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  username: z.string().min(3).optional(),
+});
+
 // Auth middleware
 function authenticateToken(req: Request & { user?: any }, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
@@ -46,7 +52,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      const { email, password, username } = req.body;
+      const { email, password, username } = registerSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -72,6 +78,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         token 
       });
     } catch (error) {
+      console.error("Registration error:", error);
+      res.status(400).json({ error: "Invalid registration data" });
+    }
+  });
+
+  // Add signup route that matches frontend call
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { email, password, username } = registerSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User already exists" });
+      }
+      
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Create user
+      const user = await storage.createUser({
+        email,
+        password: hashedPassword,
+        username: username || email.split('@')[0]
+      });
+      
+      // Generate token
+      const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      
+      res.json({ 
+        user: { id: user.id, email: user.email, username: user.username }, 
+        token 
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
       res.status(400).json({ error: "Invalid registration data" });
     }
   });
