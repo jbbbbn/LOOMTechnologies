@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,8 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+const ollamaUrl = process.env.OLLAMA_API_URL;
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -53,7 +56,7 @@ export default function AIChat() {
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await fetch("http://localhost:11434/api/generate", {
+      const response = await fetch(ollamaUrl + "/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
