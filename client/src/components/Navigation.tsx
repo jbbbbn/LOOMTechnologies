@@ -49,7 +49,6 @@ export function Navigation() {
                 alt="LOOM" 
                 className="w-10 h-10 rounded-xl object-cover shadow-lg hover:scale-110 smooth-transition"
               />
-              <span className="text-xl font-bold loom-text-gradient">LOOM</span>
             </div>
             
             {/* Desktop Navigation */}

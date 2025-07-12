@@ -27,7 +27,7 @@ const loginSchema = z.object({
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  username: z.string().min(3).optional(),
+  username: z.string().min(3),
 });
 
 // Auth middleware
@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         email,
         password: hashedPassword,
-        username: username || email.split('@')[0]
+        username
       });
       
       // Generate token
@@ -77,9 +77,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: { id: user.id, email: user.email, username: user.username }, 
         token 
       });
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(400).json({ error: "Invalid registration data" });
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      res.status(500).json({
+        error: "Internal server error",
+        message: error.message,
+        stack: error.stack
+      });
     }
   });
 
@@ -101,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         email,
         password: hashedPassword,
-        username: username || email.split('@')[0]
+        username
       });
       
       // Generate token
@@ -111,9 +115,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: { id: user.id, email: user.email, username: user.username }, 
         token 
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
-      res.status(400).json({ error: "Invalid registration data" });
+      res.status(500).json({
+        error: "Internal server error",
+        message: error.message,
+        stack: error.stack
+      });
     }
   });
 
@@ -1036,49 +1044,88 @@ Focus on providing detailed, personalized responses using the user's actual data
   // WebSocket for real-time chat
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
-  wss.on('connection', (ws) => {
-    console.log('Client connected to WebSocket');
-
-    ws.on('message', async (data) => {
-      try {
-        const { type, content, roomId } = JSON.parse(data.toString());
-        
-        if (type === 'chat_message') {
-          // Note: WebSocket doesn't have built-in authentication, so we'd need to implement token-based auth
-          // For now, we'll use a default user ID, but in production this should be properly authenticated
-          const message = await storage.createMessage({
-            userId: 1, // This should be extracted from the authenticated user
-            content,
-            roomId
-          });
-          
-          await storage.createAILearning({
-            userId: 1, // This should be extracted from the authenticated user
-            appType: "chat",
-            dataType: "message_sent",
-            data: { content, roomId }
-          });
-          
-          // Broadcast to all clients
-          wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({
-                type: 'chat_message',
-                message: message,
-                timestamp: new Date().toISOString()
-              }));
-            }
-          });
-        }
-      } catch (error) {
-        console.error('WebSocket error:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('Client disconnected from WebSocket');
-    });
+  // Create a separate WebSocket server for Vite HMR on any path
+  const allWss = new WebSocketServer({ 
+    server: httpServer, 
+    verifyClient: (info) => {
+      // Accept all WebSocket connections
+      return true;
+    }
   });
+
+  allWss.on('connection', (ws, req) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    
+    if (url.searchParams.has('token')) {
+      // This is a Vite HMR connection
+      console.log('Vite HMR WebSocket connected');
+      
+      // Send connection confirmation
+      ws.send(JSON.stringify({ type: 'connected' }));
+      
+      ws.on('message', (data) => {
+        // Handle Vite HMR messages
+        try {
+          const message = JSON.parse(data.toString());
+          // Echo back for compatibility
+          ws.send(JSON.stringify({ type: 'pong' }));
+        } catch (error) {
+          // Ignore parsing errors
+        }
+      });
+
+      ws.on('close', () => {
+        console.log('Vite HMR WebSocket disconnected');
+      });
+      
+      return;
+    }
+    
+    if (url.pathname === '/ws') {
+      // Handle regular chat WebSocket
+      console.log('Client connected to WebSocket');
+      
+      ws.on('message', async (data) => {
+        try {
+          const { type, content, roomId } = JSON.parse(data.toString());
+          
+          if (type === 'chat_message') {
+            const message = await storage.createMessage({
+              userId: 1,
+              content,
+              roomId
+            });
+            
+            await storage.createAILearning({
+              userId: 1,
+              appType: "chat",
+              dataType: "message_sent",
+              data: { content, roomId }
+            });
+            
+            // Broadcast to all clients
+            allWss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify({
+                  type: 'chat_message',
+                  message: message,
+                  timestamp: new Date().toISOString()
+                }));
+              }
+            });
+          }
+        } catch (error) {
+          console.error('WebSocket error:', error);
+        }
+      });
+
+      ws.on('close', () => {
+        console.log('Client disconnected from WebSocket');
+      });
+    }
+  });
+
+
 
   // Helper function to extract user preferences from chat messages
   async function extractUserPreferences(message: string, userId: number): Promise<void> {

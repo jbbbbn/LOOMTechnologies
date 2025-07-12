@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useEffect, useRef } from "react";
 import { 
   Bot, 
   User, 
@@ -28,6 +29,7 @@ interface ChatMessage {
 
 export default function AIChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -51,8 +53,18 @@ export default function AIChat() {
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await apiRequest("POST", "/api/ai/chat", { message });
-      return response.json();
+      const response = await fetch("http://localhost:11434/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openhermes:v2.5",
+          prompt: message,
+          stream: false
+        })
+      });
+
+      const data = await response.json();
+      return { response: data.response };
     },
     onSuccess: (data) => {
       setMessages(prev => [...prev, { 
@@ -67,6 +79,11 @@ export default function AIChat() {
       setIsLoading(false);
     },
   });
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -201,6 +218,7 @@ export default function AIChat() {
                     )}
                   </div>
                 )}
+                <div ref={bottomRef} />
               </ScrollArea>
 
               {/* Suggested Questions */}

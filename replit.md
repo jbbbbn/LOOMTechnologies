@@ -274,7 +274,7 @@ The application uses a comprehensive database schema with the following main ent
 - Vite development server with hot module replacement
 - TypeScript compilation with strict type checking
 - ESM module system throughout the application
-- Replit-specific development tools and plugins
+- Specific development tools and plugins
 
 ### Production Build
 - Vite optimized production builds

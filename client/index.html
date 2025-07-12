@@ -3,11 +3,37 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <script>
+      // Fix port resolution for WebSocket connections
+      const currentPort = '5001';
+      window.__VITE_HMR_PORT__ = currentPort;
+      
+      // Override WebSocket constructor to fix undefined port issue
+      const originalWebSocket = window.WebSocket;
+      window.WebSocket = function(url, protocols) {
+        if (typeof url === 'string' && url.includes('localhost:undefined')) {
+          url = url.replace('localhost:undefined', `localhost:${currentPort}`);
+        }
+        return new originalWebSocket(url, protocols);
+      };
+      
+      // Copy static properties
+      for (const key in originalWebSocket) {
+        if (originalWebSocket.hasOwnProperty(key)) {
+          window.WebSocket[key] = originalWebSocket[key];
+        }
+      }
+      
+      // Fix prototype
+      window.WebSocket.prototype = originalWebSocket.prototype;
+      window.WebSocket.CONNECTING = originalWebSocket.CONNECTING;
+      window.WebSocket.OPEN = originalWebSocket.OPEN;
+      window.WebSocket.CLOSING = originalWebSocket.CLOSING;
+      window.WebSocket.CLOSED = originalWebSocket.CLOSED;
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
-    <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
 </html>
