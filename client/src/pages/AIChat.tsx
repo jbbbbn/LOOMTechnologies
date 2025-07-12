@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +21,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-const ollamaUrl = process.env.OLLAMA_API_URL;
+const ollamaUrl = "https://4360a58f9cd0.ngrok-free.app";
 
 interface ChatMessage {
   role: "user" | "assistant";

@@ -9,7 +9,8 @@ interface AIResponse {
 export class LangChainOrchestrator {
   private serviceUrl: string;
 
-  constructor(serviceUrl: string = 'http://192.168.8.163:11434') {
+  //CAMBIA CON OLLAMA NGROK
+  constructor(serviceUrl: string = 'https://4360a58f9cd0.ngrok-free.app') {
     this.serviceUrl = serviceUrl;
   }
 
@@ -22,7 +23,7 @@ export class LangChainOrchestrator {
     const prompt = this.buildPrompt(message, userContext);
 
     try {
-      const response = await fetch(`${this.serviceUrl}/api/generate`, {
+      const response = await fetch(`https://4360a58f9cd0.ngrok-free.app/api/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
